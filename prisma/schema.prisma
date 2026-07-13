@@ -1,0 +1,95 @@
+// Shalwani commerce schema.
+// Local development runs on SQLite so the project works out of the box.
+// For production switch `provider` to "postgresql" and point DATABASE_URL
+// at your Postgres instance — the models are portable as-is (see README).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  nameAr        String
+  nameEn        String
+  descriptionAr String
+  descriptionEn String
+  color         String // slug into the shared color taxonomy (midnight, lazuli, ...)
+  embroidery    String // slug into the embroidery taxonomy (kashmiri, geometric, ...)
+  priceBaisa    Int // integer baisa; 1 OMR = 1000 baisa
+  images        String // JSON array of image paths, primary first
+  stock         Int         @default(0)
+  featured      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  orderItems    OrderItem[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Order {
+  id               String               @id @default(cuid())
+  orderNumber      String               @unique // SHW-XXXXXX
+  customerId       String
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  status           String               @default("pending") // pending | paid | failed | cancelled
+  totalBaisa       Int
+  shippingAddress  String
+  notes            String?
+  locale           String               @default("ar")
+  thawaniSessionId String?              @unique
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  items            OrderItem[]
+  transactions     PaymentTransaction[]
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id])
+  productId      String
+  product        Product @relation(fields: [productId], references: [id])
+  quantity       Int
+  unitPriceBaisa Int // price at the moment of purchase
+}
+
+model PaymentTransaction {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  provider   String   @default("thawani")
+  sessionId  String
+  status     String // created | paid | failed | cancelled
+  rawPayload String // full JSON payload for auditing
+  createdAt  DateTime @default(now())
+}
+
+model BespokeRequest {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  occasion    String
+  preferences String
+  status      String   @default("new") // new | quoted | paid
+  createdAt   DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  message   String
+  createdAt DateTime @default(now())
+}
