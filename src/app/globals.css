@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Shalwani design tokens — Classical Luxury / Dark Academia
+   All colors live here as custom properties. No stray hex values
+   anywhere else in the codebase.
+   ============================================================ */
+
+@theme {
+  /* Palette */
+  --color-bg: #12182a;
+  --color-surface: #1b2338;
+  --color-surface-muted: #2e3a54;
+  --color-accent: #6b93d6;
+  --color-accent-light: #a8c2e8;
+  --color-accent-dark: #3c5f94;
+  --color-accent-secondary: #8b2635;
+  --color-text: #ede6d8;
+  --color-surface-cream: #dcd1bc;
+  --color-text-on-accent: #0e1424;
+
+  /* Derived, still tokenized */
+  --color-text-dim: color-mix(in oklab, var(--color-text) 68%, var(--color-bg));
+  --color-hairline: color-mix(in oklab, var(--color-surface-muted) 80%, transparent);
+
+  /* Motion — slow, assured, no bounce */
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-calm: 300ms;
+  --duration-stately: 450ms;
+
+  /* Type scale ≈ 1.25 (major third) on a 16px base */
+  --text-xs: 0.8rem;
+  --text-sm: 0.9rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+  --text-4xl: 3.052rem;
+  --text-5xl: 3.815rem;
+
+  /* Radii — one quiet radius everywhere */
+  --radius-soft: 2px;
+}
+
+/* Font selection switches with the page language. Components never
+   set font families directly — they use font-display / font-heading /
+   font-body utilities which resolve through these variables. */
+@theme inline {
+  --font-display: var(--font-sel-display);
+  --font-heading: var(--font-sel-heading);
+  --font-body: var(--font-sel-body);
+}
+
+html[lang="ar"] {
+  --font-sel-display: var(--font-reem-kufi), var(--font-marcellus), serif;
+  --font-sel-heading: var(--font-amiri), var(--font-playfair), serif;
+  --font-sel-body: var(--font-markazi), var(--font-lora), serif;
+}
+
+html[lang="en"] {
+  --font-sel-display: var(--font-marcellus), serif;
+  --font-sel-heading: var(--font-playfair), serif;
+  --font-sel-body: var(--font-lora), serif;
+}
+
+/* Inline language switches (e.g. the Latin wordmark inside an Arabic
+   page, or an Arabic quote inside the English page) re-resolve the
+   stacks at element level. */
+[lang="en"][class],
+html [lang="en"] {
+  --font-sel-display: var(--font-marcellus), serif;
+  --font-sel-heading: var(--font-playfair), serif;
+  --font-sel-body: var(--font-lora), serif;
+}
+html [lang="ar"] {
+  --font-sel-display: var(--font-reem-kufi), var(--font-marcellus), serif;
+  --font-sel-heading: var(--font-amiri), var(--font-playfair), serif;
+  --font-sel-body: var(--font-markazi), var(--font-lora), serif;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  /* Archive-room atmosphere: a faint vaulted glow, nothing that shouts */
+  background-image: radial-gradient(
+    120% 90% at 50% -10%,
+    color-mix(in oklab, var(--color-surface) 55%, var(--color-bg)) 0%,
+    var(--color-bg) 60%
+  );
+  background-attachment: fixed;
+}
+
+::selection {
+  background-color: var(--color-accent-dark);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-soft);
+}
+
+/* Hairline rules — the signature divider of the whole site */
+.hairline-b {
+  border-bottom: 1px solid var(--color-hairline);
+}
+.hairline-t {
+  border-top: 1px solid var(--color-hairline);
+}
+
+/* Quiet, stately transitions by default for interactive elements */
+a,
+button {
+  transition:
+    color var(--duration-calm) var(--ease-luxe),
+    background-color var(--duration-calm) var(--ease-luxe),
+    border-color var(--duration-calm) var(--ease-luxe),
+    opacity var(--duration-calm) var(--ease-luxe),
+    transform var(--duration-calm) var(--ease-luxe),
+    box-shadow var(--duration-calm) var(--ease-luxe);
+}
+
+/* Entrance reveal used on section mount (CSS-only, staggered via inline delay) */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in var(--duration-stately) var(--ease-luxe) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Numerals inside prices align nicely in both scripts */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
