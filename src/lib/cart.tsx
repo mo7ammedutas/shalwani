@@ -48,8 +48,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const skipPersist = useRef(true);
 
   useEffect(() => {
+    // Hydrate from localStorage after mount. This must be a post-mount state
+    // update: reading storage during render would make server and client HTML
+    // disagree. The one-time cascading render is the accepted cost.
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setItems(JSON.parse(raw) as CartItem[]);
     } catch {
       // corrupted storage — start clean

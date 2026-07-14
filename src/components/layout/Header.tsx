@@ -32,9 +32,13 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
+  // Close the mobile menu on navigation — state adjustment during render,
+  // per the React "you might not need an effect" pattern.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   const target = otherLocale(locale);
   const switchedPath = pathname.replace(new RegExp(`^/${locale}(?=/|$)`), `/${target}`) || `/${target}`;
@@ -96,8 +100,9 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Language switcher */}
-          <Link
+          {/* Language switcher — a plain anchor on purpose: flipping lang/dir
+              on <html> requires a full document load, not a soft navigation. */}
+          <a
             href={switchedPath}
             onClick={rememberLocale}
             aria-label={labels.switchLocaleLabel}
@@ -105,7 +110,7 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
             className="px-3 py-2 font-body text-sm tracking-wide text-text-dim hover:text-accent-light border border-transparent hover:border-surface-muted rounded-[var(--radius-soft)]"
           >
             {labels.switchLocale}
-          </Link>
+          </a>
 
           {/* Cart */}
           <button
