@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="760" viewBox="0 0 2400 760" role="img" aria-label="">
+  <defs>
+    <pattern id="bw" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">
+      <rect width="7" height="7" fill="#1c2645"/>
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#28345c" stroke-width="1" opacity="0.5"/>
+      <line x1="3.5" y1="0" x2="3.5" y2="7" stroke="#141b33" stroke-width="0.7" opacity="0.55"/>
+    </pattern>
+    <linearGradient id="bs" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e1424" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#0e1424" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#0e1424" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+  <rect width="2400" height="760" fill="url(#bw)"/>
+  <g opacity="0.5">
+    <line x1="0" y1="240" x2="2400" y2="240" stroke="#a8c2e8" stroke-width="1.4"/>
+    <line x1="0" y1="252" x2="2400" y2="252" stroke="#a8c2e8" stroke-width="0.8" opacity="0.6"/>
+    <line x1="0" y1="508" x2="2400" y2="508" stroke="#a8c2e8" stroke-width="0.8" opacity="0.6"/>
+    <line x1="0" y1="520" x2="2400" y2="520" stroke="#a8c2e8" stroke-width="1.4"/>
+  </g>
+  <g stroke="#a8c2e8" fill="none" opacity="0.55">
+    <!-- repeated diamond band across the middle -->
+    <g id="d" transform="translate(100,380)">
+      <path d="M0,-44 L40,0 L0,44 L-40,0 Z" stroke-width="2.2"/>
+      <path d="M0,-24 L22,0 L0,24 L-22,0 Z" stroke-width="1.4"/>
+      <circle cx="0" cy="0" r="4" fill="#dcd1bc" stroke="none"/>
+    </g>
+    <use href="#d" x="200"/><use href="#d" x="400"/><use href="#d" x="600"/><use href="#d" x="800"/>
+    <use href="#d" x="1000"/><use href="#d" x="1200"/><use href="#d" x="1400"/><use href="#d" x="1600"/>
+    <use href="#d" x="1800"/><use href="#d" x="2000"/><use href="#d" x="2200"/>
+  </g>
+  <rect width="2400" height="760" fill="url(#bs)"/>
+</svg>

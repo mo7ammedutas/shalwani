@@ -17,6 +17,7 @@ const ar = {
     contact: "تواصل معنا",
   },
   header: {
+    announcement: "توصيل لجميع أنحاء السلطنة — الدفع الآمن عبر ثواني",
     openMenu: "افتح القائمة",
     closeMenu: "أغلق القائمة",
     cart: "سلة الشراء",

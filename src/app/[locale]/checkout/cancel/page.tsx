@@ -24,7 +24,7 @@ export default async function CancelPage({
   const dict = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-40 pb-32 flex flex-col items-center gap-8 text-center">
+    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-20 pb-28 flex flex-col items-center gap-8 text-center">
       <span
         aria-hidden
         className="flex size-12 items-center justify-center rounded-full border border-accent-secondary text-accent-secondary font-display text-xl"

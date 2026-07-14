@@ -14,7 +14,7 @@ export function CartPageContent({ locale, dict }: { locale: Locale; dict: Dictio
   const { items, subtotalBaisa, setQuantity, removeItem, hydrated } = useCart();
 
   return (
-    <div className="mx-auto max-w-4xl px-5 md:px-8 pt-32 pb-24 flex flex-col gap-12">
+    <div className="mx-auto max-w-4xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-12">
       <SectionHeading as="h1" title={dict.cart.title} />
 
       {!hydrated ? null : items.length === 0 ? (

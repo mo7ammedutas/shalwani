@@ -65,7 +65,7 @@ export default async function ProductPage({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-28 pb-24 flex flex-col gap-24">
+    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-8 pb-20 flex flex-col gap-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -81,7 +81,7 @@ export default async function ProductPage({
         </Link>
       </nav>
 
-      <div className="grid gap-12 md:grid-cols-2 md:gap-16 -mt-16">
+      <div className="grid gap-12 md:grid-cols-2 md:gap-16 -mt-12">
         <ProductGallery images={images} name={name} labels={dict.product} />
 
         <div className="flex flex-col gap-7 md:pt-4">

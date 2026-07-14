@@ -12,7 +12,7 @@ export default async function NotFound() {
   const dict = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-44 pb-32 flex flex-col items-center gap-8 text-center">
+    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-20 pb-28 flex flex-col items-center gap-8 text-center">
       <div className="flex items-center gap-4 text-accent-dark" aria-hidden>
         <span className="font-display text-5xl tabular" dir="ltr">
           4

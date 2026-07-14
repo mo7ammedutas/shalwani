@@ -40,7 +40,7 @@ export default async function StyleGuidePage({
   const block = "flex flex-col gap-8 py-14 hairline-t";
 
   return (
-    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-32 pb-24 flex flex-col">
+    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col">
       <header className="pb-10">
         <SectionHeading
           as="h1"

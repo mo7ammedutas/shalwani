@@ -32,7 +32,7 @@ export default async function SuccessPage({
   const paid = result?.status === "paid";
 
   return (
-    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-40 pb-32 flex flex-col items-center gap-8 text-center">
+    <div className="mx-auto max-w-2xl px-5 md:px-8 pt-20 pb-28 flex flex-col items-center gap-8 text-center">
       {paid ? <ClearCartOnMount /> : null}
       <BrandSeal className="size-9 text-accent" />
       <h1 className="font-heading text-3xl md:text-4xl text-text" data-testid="success-title">

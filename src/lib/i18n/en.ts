@@ -19,6 +19,7 @@ const en: typeof ar = {
     contact: "Contact",
   },
   header: {
+    announcement: "Delivery across Oman — secure checkout by Thawani",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     cart: "Shopping cart",

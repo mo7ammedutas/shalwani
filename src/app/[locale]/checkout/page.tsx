@@ -24,7 +24,7 @@ export default async function CheckoutPage({
   const dict = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-32 pb-24 flex flex-col gap-12">
+    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-12">
       <SectionHeading as="h1" title={dict.checkout.title} />
       <CheckoutForm locale={locale} dict={dict} />
     </div>

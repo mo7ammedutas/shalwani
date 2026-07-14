@@ -49,3 +49,6 @@ prisma/dev.db*
 
 # keep the env template tracked
 !.env.example
+
+# local design snapshots
+/screenshots/

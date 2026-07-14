@@ -45,7 +45,7 @@ export function CartDrawer({ locale, labels }: { locale: Locale; labels: CartLab
       {/* Overlay */}
       <div
         onClick={closeCart}
-        className={`fixed inset-0 z-50 bg-[color-mix(in_oklab,var(--color-bg)_75%,transparent)] transition-opacity duration-[var(--duration-calm)] ${
+        className={`fixed inset-0 z-50 bg-[color-mix(in_oklab,var(--color-accent-dark)_45%,transparent)] transition-opacity duration-[var(--duration-calm)] ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -57,7 +57,7 @@ export function CartDrawer({ locale, labels }: { locale: Locale; labels: CartLab
         aria-label={labels.drawerTitle}
         tabIndex={-1}
         data-testid="cart-drawer"
-        className={`fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col bg-surface border-s border-surface-muted transition-transform duration-[var(--duration-stately)] ease-[var(--ease-luxe)] ${
+        className={`fixed inset-y-0 end-0 z-50 flex w-full max-w-md flex-col bg-bg border-s border-surface-muted transition-transform duration-[var(--duration-stately)] ease-[var(--ease-luxe)] ${
           isOpen ? "translate-x-0" : "ltr:translate-x-full rtl:-translate-x-full"
         }`}
       >
@@ -138,7 +138,7 @@ export function CartDrawer({ locale, labels }: { locale: Locale; labels: CartLab
               })}
             </ul>
 
-            <div className="px-6 py-6 hairline-t flex flex-col gap-4 bg-surface">
+            <div className="px-6 py-6 hairline-t flex flex-col gap-4 bg-bg">
               <div className="flex items-center justify-between">
                 <span className="text-text-dim">{labels.subtotal}</span>
                 <span className="font-heading text-xl text-text tabular" dir="ltr" data-testid="cart-subtotal">

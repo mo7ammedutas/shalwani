@@ -32,7 +32,7 @@ export default async function StoryPage({
   const dict = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-32 pb-24 flex flex-col gap-20">
+    <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-20">
       <header className="max-w-2xl flex flex-col gap-6">
         <SectionHeading as="h1" eyebrow={dict.brand.tagline} title={dict.story.title} />
         <p className="font-heading text-xl text-text-dim leading-loose">{dict.story.intro}</p>

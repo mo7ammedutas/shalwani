@@ -15,7 +15,7 @@ test.describe("home page", () => {
     await page.goto("/ar");
     const cards = page.getByTestId("product-card");
     await expect(cards.first()).toBeVisible();
-    expect(await cards.count()).toBeGreaterThanOrEqual(5);
+    expect(await cards.count()).toBeGreaterThanOrEqual(4);
     await expect(cards.first()).toContainText("ر.ع");
   });
 

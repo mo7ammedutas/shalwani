@@ -1,51 +1,51 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Shalwani design tokens — Classical Luxury / Dark Academia
-   All colors live here as custom properties. No stray hex values
-   anywhere else in the codebase.
+   Shalwani design tokens — Saaf-musar-section design language,
+   Shalwani brand palette. Light gallery canvas, midnight-navy
+   buttons, lazuli accents. All colors live here as custom
+   properties; no stray hex values anywhere else in the codebase.
    ============================================================ */
 
 @theme {
-  /* Palette */
-  --color-bg: #12182a;
-  --color-surface: #1b2338;
-  --color-surface-muted: #2e3a54;
-  --color-accent: #6b93d6;
-  --color-accent-light: #a8c2e8;
-  --color-accent-dark: #3c5f94;
-  --color-accent-secondary: #8b2635;
-  --color-text: #ede6d8;
-  --color-surface-cream: #dcd1bc;
-  --color-text-on-accent: #0e1424;
+  /* Palette — roles keep their names, values follow the light theme */
+  --color-bg: #ffffff;
+  --color-surface: #f7f7f7;
+  --color-surface-muted: #e3e3e3;
+  --color-accent: #12182a; /* primary interactive: navy buttons (was black in the reference) */
+  --color-accent-light: #3c5f94; /* links / hover / highlight text on white */
+  --color-accent-dark: #0e1424; /* active / pressed */
+  --color-accent-secondary: #8b2635; /* rare punctuation only */
+  --color-text: #1c2333; /* near-navy ink on white */
+  --color-surface-cream: #566072; /* meta / prices (slate, AA on white) */
+  --color-text-on-accent: #ede6d8; /* cream text on navy buttons */
 
   /* Derived, still tokenized */
-  --color-text-dim: color-mix(in oklab, var(--color-text) 68%, var(--color-bg));
-  --color-hairline: color-mix(in oklab, var(--color-surface-muted) 80%, transparent);
+  --color-text-dim: color-mix(in oklab, var(--color-text) 72%, var(--color-bg));
+  --color-hairline: color-mix(in oklab, var(--color-surface-muted) 90%, transparent);
 
-  /* Motion — slow, assured, no bounce */
+  /* Motion — quiet and quick, no bounce */
   --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-calm: 300ms;
-  --duration-stately: 450ms;
+  --duration-calm: 250ms;
+  --duration-stately: 400ms;
 
-  /* Type scale ≈ 1.25 (major third) on a 16px base */
-  --text-xs: 0.8rem;
-  --text-sm: 0.9rem;
-  --text-base: 1.0625rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.5625rem;
-  --text-2xl: 1.953rem;
-  --text-3xl: 2.441rem;
-  --text-4xl: 3.052rem;
-  --text-5xl: 3.815rem;
+  /* Type scale — the reference runs small and light (14px base) */
+  --text-xs: 0.6875rem; /* 11px */
+  --text-sm: 0.75rem; /* 12px */
+  --text-base: 0.875rem; /* 14px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.125rem; /* 18px */
+  --text-2xl: 1.25rem; /* 20px */
+  --text-3xl: 1.5rem; /* 24px */
+  --text-4xl: 1.75rem; /* 28px */
+  --text-5xl: 2.25rem; /* 36px */
 
-  /* Radii — one quiet radius everywhere */
-  --radius-soft: 2px;
+  /* Radii — square corners like the reference theme */
+  --radius-soft: 0px;
 }
 
-/* Font selection switches with the page language. Components never
-   set font families directly — they use font-display / font-heading /
-   font-body utilities which resolve through these variables. */
+/* Font selection switches with the page language. Components use
+   font-display / font-heading / font-body utilities only. */
 @theme inline {
   --font-display: var(--font-sel-display);
   --font-heading: var(--font-sel-heading);
@@ -53,30 +53,27 @@
 }
 
 html[lang="ar"] {
-  --font-sel-display: var(--font-reem-kufi), var(--font-marcellus), serif;
-  --font-sel-heading: var(--font-amiri), var(--font-playfair), serif;
-  --font-sel-body: var(--font-markazi), var(--font-lora), serif;
+  --font-sel-display: var(--font-cairo), sans-serif;
+  --font-sel-heading: var(--font-cairo), sans-serif;
+  --font-sel-body: var(--font-cairo), sans-serif;
 }
 
 html[lang="en"] {
-  --font-sel-display: var(--font-marcellus), serif;
-  --font-sel-heading: var(--font-playfair), serif;
-  --font-sel-body: var(--font-lora), serif;
+  --font-sel-display: var(--font-poppins), sans-serif;
+  --font-sel-heading: var(--font-poppins), sans-serif;
+  --font-sel-body: var(--font-poppins), sans-serif;
 }
 
-/* Inline language switches (e.g. the Latin wordmark inside an Arabic
-   page, or an Arabic quote inside the English page) re-resolve the
-   stacks at element level. */
-[lang="en"][class],
+/* Inline language switches re-resolve the stacks at element level. */
 html [lang="en"] {
-  --font-sel-display: var(--font-marcellus), serif;
-  --font-sel-heading: var(--font-playfair), serif;
-  --font-sel-body: var(--font-lora), serif;
+  --font-sel-display: var(--font-poppins), sans-serif;
+  --font-sel-heading: var(--font-poppins), sans-serif;
+  --font-sel-body: var(--font-poppins), sans-serif;
 }
 html [lang="ar"] {
-  --font-sel-display: var(--font-reem-kufi), var(--font-marcellus), serif;
-  --font-sel-heading: var(--font-amiri), var(--font-playfair), serif;
-  --font-sel-body: var(--font-markazi), var(--font-lora), serif;
+  --font-sel-display: var(--font-cairo), sans-serif;
+  --font-sel-heading: var(--font-cairo), sans-serif;
+  --font-sel-body: var(--font-cairo), sans-serif;
 }
 
 /* ============================================================
@@ -92,29 +89,27 @@ body {
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  line-height: 1.75;
+  font-weight: 300;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  /* Archive-room atmosphere: a faint vaulted glow, nothing that shouts */
-  background-image: radial-gradient(
-    120% 90% at 50% -10%,
-    color-mix(in oklab, var(--color-surface) 55%, var(--color-bg)) 0%,
-    var(--color-bg) 60%
-  );
-  background-repeat: no-repeat;
+}
+
+/* Arabic reads better a touch heavier than the latin 300 */
+html[lang="ar"] body {
+  font-weight: 400;
 }
 
 ::selection {
-  background-color: var(--color-accent-dark);
-  color: var(--color-text);
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-accent-light);
   outline-offset: 3px;
-  border-radius: var(--radius-soft);
 }
 
-/* Hairline rules — the signature divider of the whole site */
+/* Hairline rules */
 .hairline-b {
   border-bottom: 1px solid var(--color-hairline);
 }
@@ -122,7 +117,7 @@ body {
   border-top: 1px solid var(--color-hairline);
 }
 
-/* Quiet, stately transitions by default for interactive elements */
+/* Quiet transitions for interactive elements */
 a,
 button {
   transition:
@@ -134,7 +129,7 @@ button {
     box-shadow var(--duration-calm) var(--ease-luxe);
 }
 
-/* Entrance reveal used on section mount (CSS-only, staggered via inline delay) */
+/* Entrance reveal (CSS-only, staggered via inline delay) */
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -165,4 +160,11 @@ button {
 /* Numerals inside prices align nicely in both scripts */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* The reference theme's signature label: small caps-tracked utility text */
+.type-label {
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

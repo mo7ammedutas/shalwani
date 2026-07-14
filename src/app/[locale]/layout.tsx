@@ -63,6 +63,7 @@ export default async function LocaleLayout({
   const headerLabels = {
     brandName: dict.brand.name,
     brandLatin: dict.brand.nameLatin,
+    announcement: dict.header.announcement,
     nav: [
       { href: `/${locale}`, label: dict.nav.home },
       { href: `/${locale}/shop`, label: dict.nav.shop },

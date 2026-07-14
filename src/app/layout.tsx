@@ -1,49 +1,25 @@
 import { headers } from "next/headers";
-import {
-  Amiri,
-  Lora,
-  Marcellus,
-  Markazi_Text,
-  Playfair_Display,
-  Reem_Kufi,
-} from "next/font/google";
+import { Cairo, Poppins } from "next/font/google";
 import "./globals.css";
 import { defaultLocale, dirFor, isLocale, type Locale } from "@/lib/i18n/config";
 
-/* Six-family type system: display / heading / body, per script.
-   globals.css picks the right stack from the page language. */
-const reemKufi = Reem_Kufi({
+/* Two-family type system matching the reference theme's Poppins/Gotham
+   register: Cairo carries Arabic, Poppins carries Latin. globals.css
+   picks the stack from the page language. */
+const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  variable: "--font-reem-kufi",
+  weight: ["300", "400", "600", "700"],
+  variable: "--font-cairo",
   display: "swap",
 });
-const marcellus = Marcellus({
-  weight: "400",
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-marcellus",
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-poppins",
   display: "swap",
 });
-const amiri = Amiri({
-  weight: ["400", "700"],
-  subsets: ["arabic", "latin"],
-  variable: "--font-amiri",
-  display: "swap",
-});
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-const markazi = Markazi_Text({
-  subsets: ["arabic", "latin"],
-  variable: "--font-markazi",
-  display: "swap",
-});
-const lora = Lora({ subsets: ["latin"], variable: "--font-lora", display: "swap" });
 
-const fontVariables = [reemKufi, marcellus, amiri, playfair, markazi, lora]
-  .map((f) => f.variable)
-  .join(" ");
+const fontVariables = `${cairo.variable} ${poppins.variable}`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // The proxy stamps every locale-prefixed request with x-locale.
