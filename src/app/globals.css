@@ -100,7 +100,7 @@ body {
     color-mix(in oklab, var(--color-surface) 55%, var(--color-bg)) 0%,
     var(--color-bg) 60%
   );
-  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 ::selection {
