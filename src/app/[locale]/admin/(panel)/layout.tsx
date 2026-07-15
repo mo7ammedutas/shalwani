@@ -28,6 +28,12 @@ export default async function AdminPanelLayout({
             {dict.admin.navProducts}
           </Link>
           <Link
+            href={`/${locale}/admin/gift-addons`}
+            className="type-label text-text hover:text-accent-light"
+          >
+            {dict.admin.navGiftAddons}
+          </Link>
+          <Link
             href={`/${locale}/admin/orders`}
             className="type-label text-text hover:text-accent-light"
           >

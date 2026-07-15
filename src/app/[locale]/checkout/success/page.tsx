@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { isLocale, SOCIAL, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { verifyOrderPayment } from "@/lib/orders";
+import { prisma } from "@/lib/db";
 import { ButtonLink } from "@/components/ui/Button";
 import { BrandSeal, IconWhatsApp } from "@/components/ui/icons";
 import { ClearCartOnMount } from "@/components/shop/ClearCartOnMount";
@@ -30,6 +31,13 @@ export default async function SuccessPage({
   // Verify against Thawani server-side — the redirect alone is never trusted.
   const result = order ? await verifyOrderPayment(order) : null;
   const paid = result?.status === "paid";
+  const isGift =
+    result && result.status !== "not_found"
+      ? (await prisma.order.findUnique({
+          where: { orderNumber: result.orderNumber },
+          select: { isGift: true },
+        }))?.isGift ?? false
+      : false;
 
   return (
     <div className="mx-auto max-w-2xl px-5 md:px-8 pt-20 pb-28 flex flex-col items-center gap-8 text-center">
@@ -49,6 +57,11 @@ export default async function SuccessPage({
       <p className="max-w-prose text-text-dim leading-loose">
         {paid ? dict.success.paidBody : dict.success.pendingBody}
       </p>
+      {isGift ? (
+        <p className="max-w-prose text-sm text-accent-light" data-testid="gift-note">
+          {dict.success.giftNote}
+        </p>
+      ) : null}
       <div className="mt-4 flex flex-wrap justify-center gap-4">
         <ButtonLink href={`/${locale}`} variant="primary">
           {dict.success.backHome}

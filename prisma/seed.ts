@@ -150,6 +150,11 @@ const products = [
   },
 ];
 
+const giftAddons = [
+  { slug: "roses", nameAr: "باقة ورد", nameEn: "Bouquet of roses", priceBaisa: 3000 },
+  { slug: "chocolate", nameAr: "علبة شوكولاتة", nameEn: "Box of chocolates", priceBaisa: 2500 },
+];
+
 async function main() {
   for (const p of products) {
     const images = JSON.stringify([`/products/${p.slug}-1.svg`, `/products/${p.slug}-2.svg`]);
@@ -160,6 +165,11 @@ async function main() {
     });
   }
   console.log(`Seeded ${products.length} products.`);
+
+  for (const a of giftAddons) {
+    await prisma.giftAddon.upsert({ where: { slug: a.slug }, update: a, create: a });
+  }
+  console.log(`Seeded ${giftAddons.length} gift add-ons.`);
 }
 
 main()

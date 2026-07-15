@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
+import { getActiveGiftAddons } from "@/lib/gift-addons";
 import { CheckoutForm } from "@/components/shop/CheckoutForm";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -22,11 +23,12 @@ export default async function CheckoutPage({
   const { locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : "ar";
   const dict = getDictionary(locale);
+  const giftAddons = await getActiveGiftAddons();
 
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-12">
       <SectionHeading as="h1" title={dict.checkout.title} />
-      <CheckoutForm locale={locale} dict={dict} />
+      <CheckoutForm locale={locale} dict={dict} giftAddons={giftAddons} />
     </div>
   );
 }

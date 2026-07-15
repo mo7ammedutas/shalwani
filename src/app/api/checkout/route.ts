@@ -5,6 +5,7 @@ import { cartTotalBaisa } from "@/lib/money";
 import { createCheckoutSession, isMockMode, payRedirectUrl } from "@/lib/thawani";
 import { newOrderNumber } from "@/lib/orders";
 import { isLocale } from "@/lib/i18n/config";
+import { SHIPPING_FEE_BAISA } from "@/lib/shipping";
 
 const checkoutSchema = z.object({
   locale: z.string().refine(isLocale),
@@ -24,6 +25,12 @@ const checkoutSchema = z.object({
     )
     .min(1)
     .max(30),
+  // Keep in sync with ShippingZone in @/lib/shipping.
+  shippingZone: z.enum(["oman", "gulf"]).default("oman"),
+  isGift: z.boolean().default(false),
+  giftMessage: z.string().trim().max(500).optional(),
+  recipientName: z.string().trim().max(120).optional(),
+  giftAddonIds: z.array(z.string().min(1)).max(10).default([]),
 });
 
 export async function POST(request: Request) {
@@ -52,9 +59,24 @@ export async function POST(request: Request) {
     lines.push({ product, quantity: item.quantity });
   }
 
-  const totalBaisa = cartTotalBaisa(
+  const productsTotal = cartTotalBaisa(
     lines.map((l) => ({ unitPriceBaisa: l.product.priceBaisa, quantity: l.quantity })),
   );
+
+  // Gift add-ons are only honoured when isGift is set, and only active,
+  // currently-published add-ons — never trust client-supplied names/prices.
+  const addons =
+    input.isGift && input.giftAddonIds.length > 0
+      ? await prisma.giftAddon.findMany({
+          where: { id: { in: input.giftAddonIds }, active: true },
+        })
+      : [];
+  if (input.isGift && addons.length !== new Set(input.giftAddonIds).size) {
+    return NextResponse.json({ error: "unknown_gift_addon" }, { status: 400 });
+  }
+  const addonsTotal = addons.reduce((sum, a) => sum + a.priceBaisa, 0);
+  const shippingFee = SHIPPING_FEE_BAISA[input.shippingZone];
+  const totalBaisa = productsTotal + addonsTotal + shippingFee;
 
   const customer = await prisma.customer.upsert({
     where: { phone: input.customer.phone },
@@ -76,11 +98,25 @@ export async function POST(request: Request) {
       shippingAddress: input.address,
       notes: input.notes || null,
       locale: input.locale,
+      isGift: input.isGift,
+      giftMessage: input.isGift ? input.giftMessage || null : null,
+      recipientName: input.isGift ? input.recipientName || null : null,
+      shippingZone: input.shippingZone,
+      shippingFeeBaisa: shippingFee,
+      giftAddonsTotalBaisa: addonsTotal,
       items: {
         create: lines.map((l) => ({
           productId: l.product.id,
           quantity: l.quantity,
           unitPriceBaisa: l.product.priceBaisa,
+        })),
+      },
+      giftAddons: {
+        create: addons.map((a) => ({
+          addonId: a.id,
+          nameAr: a.nameAr,
+          nameEn: a.nameEn,
+          priceBaisa: a.priceBaisa,
         })),
       },
     },
@@ -90,14 +126,31 @@ export async function POST(request: Request) {
   const successUrl = `${siteUrl}/${input.locale}/checkout/success?order=${orderNumber}`;
   const cancelUrl = `${siteUrl}/${input.locale}/checkout/cancel?order=${orderNumber}`;
 
+  const productLines = lines.map((l) => ({
+    name: (input.locale === "ar" ? l.product.nameAr : l.product.nameEn).slice(0, 40),
+    quantity: l.quantity,
+    unit_amount: l.product.priceBaisa, // integer baisa
+  }));
+  const addonLines = addons.map((a) => ({
+    name: (input.locale === "ar" ? a.nameAr : a.nameEn).slice(0, 40),
+    quantity: 1,
+    unit_amount: a.priceBaisa,
+  }));
+  const shippingLine =
+    shippingFee > 0
+      ? [
+          {
+            name: input.locale === "ar" ? "شحن خليجي" : "Gulf shipping",
+            quantity: 1,
+            unit_amount: shippingFee,
+          },
+        ]
+      : [];
+
   try {
     const session = await createCheckoutSession({
       clientReferenceId: orderNumber,
-      products: lines.map((l) => ({
-        name: (input.locale === "ar" ? l.product.nameAr : l.product.nameEn).slice(0, 40),
-        quantity: l.quantity,
-        unit_amount: l.product.priceBaisa, // integer baisa
-      })),
+      products: [...productLines, ...addonLines, ...shippingLine],
       successUrl,
       cancelUrl,
       metadata: { orderNumber, phone: input.customer.phone },

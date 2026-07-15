@@ -1,22 +1,53 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import type { GiftAddon } from "@prisma/client";
 import { useCart } from "@/lib/cart";
 import { formatOmr } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
+import { SHIPPING_FEE_BAISA, type ShippingZone } from "@/lib/shipping";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { FieldError, Label, TextArea, TextInput } from "@/components/ui/Field";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 type Errors = Partial<Record<"name" | "phone" | "address" | "form", string>>;
 
-export function CheckoutForm({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function CheckoutForm({
+  locale,
+  dict,
+  giftAddons,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  giftAddons: GiftAddon[];
+}) {
   const { items, subtotalBaisa, hydrated } = useCart();
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [shippingZone, setShippingZone] = useState<ShippingZone>("oman");
+  const [isGift, setIsGift] = useState(false);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   const t = dict.checkout;
+
+  const addonsTotal = useMemo(
+    () =>
+      isGift
+        ? giftAddons
+            .filter((a) => selectedAddonIds.includes(a.id))
+            .reduce((sum, a) => sum + a.priceBaisa, 0)
+        : 0,
+    [isGift, selectedAddonIds, giftAddons],
+  );
+  const shippingFee = SHIPPING_FEE_BAISA[shippingZone];
+  const grandTotal = subtotalBaisa + addonsTotal + shippingFee;
+
+  function toggleAddon(id: string) {
+    setSelectedAddonIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   if (hydrated && items.length === 0 && !submitting) {
     return (
@@ -37,6 +68,8 @@ export function CheckoutForm({ locale, dict }: { locale: Locale; dict: Dictionar
     const email = String(form.get("email") ?? "").trim();
     const address = String(form.get("address") ?? "").trim();
     const notes = String(form.get("notes") ?? "").trim();
+    const recipientName = String(form.get("recipientName") ?? "").trim();
+    const giftMessage = String(form.get("giftMessage") ?? "").trim();
 
     const next: Errors = {};
     if (name.length < 2) next.name = t.errors.nameRequired;
@@ -56,6 +89,11 @@ export function CheckoutForm({ locale, dict }: { locale: Locale; dict: Dictionar
           address,
           notes,
           items: items.map((i) => ({ slug: i.slug, quantity: i.quantity })),
+          shippingZone,
+          isGift,
+          giftMessage: isGift ? giftMessage : undefined,
+          recipientName: isGift ? recipientName : undefined,
+          giftAddonIds: isGift ? selectedAddonIds : [],
         }),
       });
       const data = (await res.json()) as { redirectUrl?: string; error?: string };
@@ -133,6 +171,107 @@ export function CheckoutForm({ locale, dict }: { locale: Locale; dict: Dictionar
             <Label htmlFor="co-notes">{t.notes}</Label>
             <TextArea id="co-notes" name="notes" rows={2} placeholder={t.notesPlaceholder} />
           </div>
+
+          {/* Shipping zone */}
+          <fieldset className="flex flex-col gap-3 pt-2">
+            <legend className="mb-1 text-sm tracking-wide text-text-dim">{t.shipping.title}</legend>
+            <div className="flex flex-col gap-2.5">
+              {(["oman", "gulf"] as ShippingZone[]).map((zone) => (
+                <label
+                  key={zone}
+                  className="flex cursor-pointer items-start gap-3 border border-surface-muted px-4 py-3 has-[:checked]:border-accent-light"
+                >
+                  <input
+                    type="radio"
+                    name="shippingZoneChoice"
+                    value={zone}
+                    checked={shippingZone === zone}
+                    onChange={() => setShippingZone(zone)}
+                    className="mt-1 accent-[var(--color-accent)]"
+                    data-testid={`shipping-${zone}`}
+                  />
+                  <span className="flex flex-col">
+                    <span className="text-base text-text">
+                      {zone === "oman" ? t.shipping.oman : t.shipping.gulf}
+                    </span>
+                    <span className="text-sm text-text-dim">
+                      {zone === "oman"
+                        ? t.shipping.omanNote
+                        : `${t.shipping.gulfNote} — ${formatOmr(SHIPPING_FEE_BAISA.gulf, locale)}`}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </fieldset>
+
+        {/* Gift */}
+        <fieldset className="flex flex-col gap-5 hairline-t pt-8">
+          <legend className="sr-only">{t.gift.toggle}</legend>
+          <label className="flex items-center gap-3 text-lg text-text cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isGift}
+              onChange={(e) => setIsGift(e.target.checked)}
+              className="size-4 accent-[var(--color-accent)]"
+              data-testid="gift-toggle"
+            />
+            {t.gift.toggle}
+          </label>
+
+          {isGift ? (
+            <div className="flex flex-col gap-5 ps-1">
+              {giftAddons.length > 0 ? (
+                <div className="flex flex-col gap-2.5">
+                  <span className="text-sm tracking-wide text-text-dim">{t.gift.addonsTitle}</span>
+                  {giftAddons.map((addon) => (
+                    <label
+                      key={addon.id}
+                      className="flex cursor-pointer items-center justify-between gap-3 border border-surface-muted px-4 py-3 has-[:checked]:border-accent-light"
+                    >
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedAddonIds.includes(addon.id)}
+                          onChange={() => toggleAddon(addon.id)}
+                          className="size-4 accent-[var(--color-accent)]"
+                          data-testid={`addon-${addon.slug}`}
+                        />
+                        <span className="text-base text-text">
+                          {locale === "ar" ? addon.nameAr : addon.nameEn}
+                        </span>
+                      </span>
+                      <span className="tabular text-sm text-text-dim" dir="ltr">
+                        {formatOmr(addon.priceBaisa, locale)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+
+              <div>
+                <Label htmlFor="co-recipient">{t.gift.recipientName}</Label>
+                <TextInput
+                  id="co-recipient"
+                  name="recipientName"
+                  placeholder={t.gift.recipientNamePlaceholder}
+                  data-testid="gift-recipient"
+                />
+              </div>
+              <div>
+                <Label htmlFor="co-gift-message">{t.gift.messageLabel}</Label>
+                <TextArea
+                  id="co-gift-message"
+                  name="giftMessage"
+                  rows={3}
+                  maxLength={500}
+                  placeholder={t.gift.messagePlaceholder}
+                  data-testid="gift-message"
+                />
+              </div>
+            </div>
+          ) : null}
         </fieldset>
       </div>
 
@@ -158,10 +297,36 @@ export function CheckoutForm({ locale, dict }: { locale: Locale; dict: Dictionar
             );
           })}
         </ul>
-        <div className="flex items-center justify-between">
+
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-text-dim">{t.subtotal}</span>
+            <span className="tabular text-text" dir="ltr">
+              {formatOmr(subtotalBaisa, locale)}
+            </span>
+          </div>
+          {isGift && addonsTotal > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-dim">{t.gift.lineLabel}</span>
+              <span className="tabular text-text" dir="ltr" data-testid="addons-total">
+                {formatOmr(addonsTotal, locale)}
+              </span>
+            </div>
+          ) : null}
+          {shippingFee > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-dim">{t.gift.shippingLine}</span>
+              <span className="tabular text-text" dir="ltr" data-testid="shipping-fee">
+                {formatOmr(shippingFee, locale)}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-between hairline-t pt-4">
           <span className="text-text-dim">{t.total}</span>
           <span className="font-heading text-2xl text-text tabular" dir="ltr" data-testid="checkout-total">
-            {formatOmr(subtotalBaisa, locale)}
+            {formatOmr(grandTotal, locale)}
           </span>
         </div>
         {errors.form ? (

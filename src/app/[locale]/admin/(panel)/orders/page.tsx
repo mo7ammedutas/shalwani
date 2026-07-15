@@ -16,7 +16,7 @@ export default async function AdminOrdersPage({
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: { customer: true, items: { include: { product: true } } },
+    include: { customer: true, items: { include: { product: true } }, giftAddons: true },
   });
 
   return (
@@ -49,12 +49,41 @@ export default async function AdminOrdersPage({
                     {o.customer.phone}
                   </td>
                   <td className="py-3 pe-4 text-text-dim">
-                    {o.items
-                      .map(
-                        (i) =>
-                          `${locale === "ar" ? i.product.nameAr : i.product.nameEn} × ${i.quantity}`,
-                      )
-                      .join("، ")}
+                    <span className="block">
+                      {o.items
+                        .map(
+                          (i) =>
+                            `${locale === "ar" ? i.product.nameAr : i.product.nameEn} × ${i.quantity}`,
+                        )
+                        .join("، ")}
+                    </span>
+                    {o.isGift ? (
+                      <span className="mt-1.5 flex flex-col gap-1 border-s-2 border-accent-light ps-2.5">
+                        <span className="type-label text-accent-light">{t.giftBadge}</span>
+                        {o.giftAddons.length > 0 ? (
+                          <span className="text-xs">
+                            {o.giftAddons
+                              .map((g) => (locale === "ar" ? g.nameAr : g.nameEn))
+                              .join("، ")}
+                          </span>
+                        ) : null}
+                        {o.recipientName ? (
+                          <span className="text-xs">
+                            {t.recipientLabel}: {o.recipientName}
+                          </span>
+                        ) : null}
+                        {o.giftMessage ? (
+                          <span className="text-xs italic">
+                            {t.giftMessageLabel}: {o.giftMessage}
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : null}
+                    {o.shippingZone === "gulf" ? (
+                      <span className="mt-1 block text-xs text-accent-secondary">
+                        {t.shippingGulf}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="py-3 pe-4">
                     <Price baisa={o.totalBaisa} locale={locale} className="text-text" />

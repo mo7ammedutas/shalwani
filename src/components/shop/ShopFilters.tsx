@@ -34,12 +34,14 @@ export function ShopFilters({
 
   const setParam = useCallback(
     (key: string, value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
+      // Read the live URL rather than the hook value: two quick selections
+      // in a row would otherwise build from stale params and drop each other.
+      const params = new URLSearchParams(window.location.search);
       if (value) params.set(key, value);
       else params.delete(key);
       router.replace(`${pathname}${params.size ? `?${params}` : ""}`, { scroll: false });
     },
-    [router, pathname, searchParams],
+    [router, pathname],
   );
 
   const hasFilters = ["color", "embroidery", "price", "sort"].some((k) =>

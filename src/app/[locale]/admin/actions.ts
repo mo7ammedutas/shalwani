@@ -159,3 +159,110 @@ export async function setArchived(locale: string, id: string, archived: boolean)
   refresh();
   redirect(`/${locale}/admin?saved=1`);
 }
+
+// ── Gift add-ons ──────────────────────────────────────────────
+
+const giftAddonSchema = z.object({
+  nameAr: z.string().trim().min(1).max(80),
+  nameEn: z.string().trim().min(1).max(80),
+  priceOmr: z
+    .string()
+    .trim()
+    .regex(/^\d+(\.\d{1,3})?$/),
+  active: z.boolean(),
+});
+
+function parseGiftAddonForm(formData: FormData) {
+  return giftAddonSchema.safeParse({
+    nameAr: formData.get("nameAr"),
+    nameEn: formData.get("nameEn"),
+    priceOmr: formData.get("priceOmr"),
+    active: formData.get("active") === "on",
+  });
+}
+
+function addonSlugify(nameEn: string): string {
+  return (
+    nameEn
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "addon"
+  );
+}
+
+async function uniqueAddonSlug(base: string, excludeId?: string): Promise<string> {
+  let slug = base;
+  for (let i = 2; i < 50; i++) {
+    const existing = await prisma.giftAddon.findUnique({ where: { slug } });
+    if (!existing || existing.id === excludeId) return slug;
+    slug = `${base}-${i}`;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+export async function createGiftAddon(locale: string, formData: FormData) {
+  await guard(locale);
+  const parsed = parseGiftAddonForm(formData);
+  if (!parsed.success) redirect(`/${locale}/admin/gift-addons/new?error=1`);
+  const data = parsed.data;
+
+  await prisma.giftAddon.create({
+    data: {
+      slug: await uniqueAddonSlug(addonSlugify(data.nameEn)),
+      nameAr: data.nameAr,
+      nameEn: data.nameEn,
+      priceBaisa: omrToBaisa(parseFloat(data.priceOmr)),
+      active: data.active,
+    },
+  });
+  refresh();
+  redirect(`/${locale}/admin/gift-addons?saved=1`);
+}
+
+export async function updateGiftAddon(locale: string, id: string, formData: FormData) {
+  await guard(locale);
+  const parsed = parseGiftAddonForm(formData);
+  if (!parsed.success) redirect(`/${locale}/admin/gift-addons/${id}?error=1`);
+  const data = parsed.data;
+
+  await prisma.giftAddon.update({
+    where: { id },
+    data: {
+      nameAr: data.nameAr,
+      nameEn: data.nameEn,
+      priceBaisa: omrToBaisa(parseFloat(data.priceOmr)),
+      active: data.active,
+    },
+  });
+  refresh();
+  redirect(`/${locale}/admin/gift-addons?saved=1`);
+}
+
+/** Hard-deletes when possible; deactivates instead when order history exists. */
+export async function deleteGiftAddon(locale: string, id: string) {
+  await guard(locale);
+  let outcome: "deleted" | "deactivated" = "deleted";
+  try {
+    await prisma.giftAddon.delete({ where: { id } });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      (err.code === "P2003" || err.code === "P2014")
+    ) {
+      await prisma.giftAddon.update({ where: { id }, data: { active: false } });
+      outcome = "deactivated";
+    } else {
+      throw err;
+    }
+  }
+  refresh();
+  redirect(`/${locale}/admin/gift-addons?${outcome}=1`);
+}
+
+export async function setGiftAddonActive(locale: string, id: string, active: boolean) {
+  await guard(locale);
+  await prisma.giftAddon.update({ where: { id }, data: { active } });
+  refresh();
+  redirect(`/${locale}/admin/gift-addons?saved=1`);
+}

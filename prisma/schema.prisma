@@ -39,20 +39,27 @@ model Customer {
 }
 
 model Order {
-  id               String               @id @default(cuid())
-  orderNumber      String               @unique // SHW-XXXXXX
-  customerId       String
-  customer         Customer             @relation(fields: [customerId], references: [id])
-  status           String               @default("pending") // pending | paid | failed | cancelled
-  totalBaisa       Int
-  shippingAddress  String
-  notes            String?
-  locale           String               @default("ar")
-  thawaniSessionId String?              @unique
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  items            OrderItem[]
-  transactions     PaymentTransaction[]
+  id                   String               @id @default(cuid())
+  orderNumber          String               @unique // SHW-XXXXXX
+  customerId           String
+  customer             Customer             @relation(fields: [customerId], references: [id])
+  status               String               @default("pending") // pending | paid | failed | cancelled
+  totalBaisa           Int // grand total: products + gift add-ons + shipping fee
+  shippingAddress      String
+  notes                String?
+  locale               String               @default("ar")
+  thawaniSessionId     String?              @unique
+  isGift               Boolean              @default(false)
+  giftMessage          String?
+  recipientName        String?
+  shippingZone         String               @default("oman") // "oman" | "gulf"
+  shippingFeeBaisa     Int                  @default(0)
+  giftAddonsTotalBaisa Int                  @default(0)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  items                OrderItem[]
+  giftAddons           OrderGiftAddon[]
+  transactions         PaymentTransaction[]
 }
 
 model OrderItem {
@@ -63,6 +70,28 @@ model OrderItem {
   product        Product @relation(fields: [productId], references: [id])
   quantity       Int
   unitPriceBaisa Int // price at the moment of purchase
+}
+
+model GiftAddon {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  nameAr      String
+  nameEn      String
+  priceBaisa  Int
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  orderAddons OrderGiftAddon[]
+}
+
+model OrderGiftAddon {
+  id         String     @id @default(cuid())
+  orderId    String
+  order      Order      @relation(fields: [orderId], references: [id])
+  addonId    String?
+  addon      GiftAddon? @relation(fields: [addonId], references: [id])
+  nameAr     String // snapshot at time of order
+  nameEn     String
+  priceBaisa Int
 }
 
 model PaymentTransaction {

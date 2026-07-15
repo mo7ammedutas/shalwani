@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n";
@@ -8,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { Label, TextInput } from "@/components/ui/Field";
 
 export function AdminLoginForm({ locale, dict }: { locale: Locale; dict: Dictionary }) {
-  const router = useRouter();
   const [state, setState] = useState<"idle" | "busy" | "error">("idle");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -25,8 +23,9 @@ export function AdminLoginForm({ locale, dict }: { locale: Locale; dict: Diction
         setState("error");
         return;
       }
-      router.replace(`/${locale}/admin`);
-      router.refresh();
+      // Hard navigation on purpose: the fresh document request carries the
+      // new session cookie, avoiding client-router RSC cache races.
+      window.location.assign(`/${locale}/admin`);
     } catch {
       setState("error");
     }
