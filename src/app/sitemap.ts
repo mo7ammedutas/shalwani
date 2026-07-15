@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { locales } from "@/lib/i18n/config";
 
+// Served per-request, never prerendered: the product list lives in the
+// database, which isn't reachable during `next build`.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
   const products = await prisma.product.findMany({ select: { slug: true, createdAt: true } });

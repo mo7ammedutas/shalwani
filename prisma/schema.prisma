@@ -1,14 +1,13 @@
-// Shalwani commerce schema.
-// Local development runs on SQLite so the project works out of the box.
-// For production switch `provider` to "postgresql" and point DATABASE_URL
-// at your Postgres instance — the models are portable as-is (see README).
+// Shalwani commerce schema — PostgreSQL (Neon/Supabase/Vercel Postgres).
+// Point DATABASE_URL at your Postgres instance for both dev and prod
+// (free Neon branches work well for local development — see README).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

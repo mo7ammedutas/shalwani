@@ -12,11 +12,13 @@
 
 ```bash
 npm install                 # يشغّل prisma generate تلقائياً (postinstall)
-cp .env.example .env        # القيم الافتراضية تعمل فوراً: SQLite + وضع Thawani التجريبي Mock
-npx prisma migrate dev      # ينشئ قاعدة البيانات المحلية dev.db
+cp .env.example .env        # ثم ضع رابط PostgreSQL في DATABASE_URL (Neon المجاني يكفي)
+npx prisma migrate deploy   # يطبّق المخطط على قاعدة البيانات
 npm run db:seed             # يزرع 10 منتجات نموذجية ثنائية اللغة
 npm run dev                 # http://localhost:3000 → يحوّل تلقائياً إلى /ar
 ```
+
+> المخطط يستهدف PostgreSQL في كل البيئات. للتطوير المحلي أنشئ فرعاً مجانياً في [neon.tech](https://neon.tech) والصق رابطه في `.env` — أو شغّل Postgres محلياً عبر Docker.
 
 | أمر | الوظيفة |
 |---|---|
@@ -101,14 +103,9 @@ NEXT_PUBLIC_SITE_URL="https://your-domain.com"
 
 الجداول: `Product` (ترجمة ar/en، السعر بالبيسة `Int`، صور JSON، مخزون) · `Customer` · `Order` (+`orderNumber` بصيغة `SHW-XXXXXXXX`) · `OrderItem` (يجمّد سعر لحظة الشراء) · `PaymentTransaction` (سجل تدقيق كامل) · `BespokeRequest` · `ContactMessage`.
 
-### التحويل إلى PostgreSQL للإنتاج
+### PostgreSQL في كل البيئات
 
-1. في `prisma/schema.prisma` غيّر `provider = "sqlite"` إلى `provider = "postgresql"`.
-2. اضبط `DATABASE_URL` على قاعدة Postgres (Neon أو Supabase أو Vercel Postgres).
-3. احذف مجلد `prisma/migrations` (migrations SQLite غير متوافقة) ثم `npx prisma migrate dev --name init` لتوليد migrations جديدة نظيفة.
-4. `npm run db:seed` لزرع الكتالوج.
-
-النماذج نفسها متوافقة مع المحرّكين بلا أي تعديل.
+المخطط يستهدف PostgreSQL مباشرة، وmigration البداية جاهزة في `prisma/migrations/0_init/`. أمر البناء (`npm run build`) يشغّل `prisma migrate deploy` تلقائياً، فكل نشر على Vercel يطبّق أي migrations جديدة قبل البناء. لزرع الكتالوج في قاعدة الإنتاج مرة واحدة: `npx prisma db seed` محلياً مع ضبط `DATABASE_URL` على قاعدة الإنتاج.
 
 ---
 
