@@ -53,7 +53,8 @@ export function ProductCard({
           {name}
         </h3>
         <p className="text-sm text-text-dim">
-          {dict.colors[product.color]} · {dict.embroidery[product.embroidery]}
+          {dict.colors[product.color] ?? product.color} ·{" "}
+          {dict.embroidery[product.embroidery] ?? product.embroidery}
         </p>
         <Price baisa={product.priceBaisa} locale={locale} className="text-sm text-surface-cream" />
       </div>

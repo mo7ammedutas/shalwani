@@ -7,7 +7,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { productImagesClient } from "@/lib/product-images";
 import { baisaToOmr } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
-import { Label, Select, TextArea, TextInput } from "@/components/ui/Field";
+import { Label, TextArea, TextInput } from "@/components/ui/Field";
 import { IconClose, IconPlus } from "@/components/ui/icons";
 
 export function ProductForm({
@@ -91,30 +91,46 @@ export function ProductForm({
         </div>
       </div>
 
+      {/* Free-text merchandising fields; datalists offer the existing
+          vocabulary as suggestions without restricting input. */}
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <Label htmlFor="pf-color">{t.color}</Label>
-          <Select id="pf-color" name="color" defaultValue={product?.color ?? colorOptions[0]?.[0]}>
+          <TextInput
+            id="pf-color"
+            name="color"
+            required
+            minLength={1}
+            maxLength={40}
+            list="pf-color-options"
+            placeholder={t.colorPlaceholder}
+            defaultValue={product ? (dict.colors[product.color] ?? product.color) : ""}
+            data-testid="pf-color"
+          />
+          <datalist id="pf-color-options">
             {colorOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
+              <option key={value} value={label} />
             ))}
-          </Select>
+          </datalist>
         </div>
         <div>
           <Label htmlFor="pf-embroidery">{t.embroidery}</Label>
-          <Select
+          <TextInput
             id="pf-embroidery"
             name="embroidery"
-            defaultValue={product?.embroidery ?? embroideryOptions[0]?.[0]}
-          >
+            required
+            minLength={1}
+            maxLength={40}
+            list="pf-embroidery-options"
+            placeholder={t.embroideryPlaceholder}
+            defaultValue={product ? (dict.embroidery[product.embroidery] ?? product.embroidery) : ""}
+            data-testid="pf-embroidery"
+          />
+          <datalist id="pf-embroidery-options">
             {embroideryOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
+              <option key={value} value={label} />
             ))}
-          </Select>
+          </datalist>
         </div>
       </div>
 

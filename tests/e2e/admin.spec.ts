@@ -38,6 +38,8 @@ test.describe("admin panel", () => {
     await page.getByTestId("pf-nameEn").fill("The E2E Test Massar");
     await page.getByTestId("pf-descAr").fill("وصف تجريبي للاختبار الآلي.");
     await page.getByTestId("pf-descEn").fill("Automated test description.");
+    await page.getByTestId("pf-color").fill("كحلي تجريبي");
+    await page.getByTestId("pf-embroidery").fill("تطريز تجريبي");
     await page.getByTestId("pf-price").fill("21.500");
     await page.getByTestId("pf-stock").fill("4");
     await page.setInputFiles('input[type="file"]', {
@@ -45,8 +47,12 @@ test.describe("admin panel", () => {
       mimeType: "image/png",
       buffer: PNG,
     });
-    // next/image rewrites the src through /_next/image?url=%2Fuploads%2F…
-    await expect(page.locator('img[src*="uploads"]').first()).toBeVisible();
+    // next/image rewrites the src through /_next/image?url=… — the upload
+    // lands in public/uploads locally, or in Vercel Blob when a
+    // BLOB_READ_WRITE_TOKEN is present (e.g. pulled into .env.local).
+    await expect(
+      page.locator('img[src*="uploads"], img[src*="blob.vercel-storage"]').first(),
+    ).toBeVisible({ timeout: 15_000 });
     await page.getByTestId("pf-save").click();
 
     await expect(page).toHaveURL(/\/ar\/admin\?saved=1/);

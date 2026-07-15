@@ -87,7 +87,8 @@ export default async function ProductPage({
         <div className="flex flex-col gap-7 md:pt-4">
           <div className="flex flex-col gap-3">
             <p className="text-sm tracking-[0.22em] uppercase text-accent-light">
-              {dict.colors[product.color]} · {dict.embroidery[product.embroidery]}
+              {dict.colors[product.color] ?? product.color} ·{" "}
+              {dict.embroidery[product.embroidery] ?? product.embroidery}
             </p>
             <h1 className="font-heading text-3xl md:text-4xl text-text leading-tight">{name}</h1>
           </div>
@@ -139,11 +140,13 @@ export default async function ProductPage({
             </div>
             <div>
               <dt className="text-text-dim mb-1">{dict.product.color}</dt>
-              <dd className="text-text">{dict.colors[product.color]}</dd>
+              <dd className="text-text">{dict.colors[product.color] ?? product.color}</dd>
             </div>
             <div>
               <dt className="text-text-dim mb-1">{dict.product.embroidery}</dt>
-              <dd className="text-text">{dict.embroidery[product.embroidery]}</dd>
+              <dd className="text-text">
+                {dict.embroidery[product.embroidery] ?? product.embroidery}
+              </dd>
             </div>
           </dl>
         </div>
