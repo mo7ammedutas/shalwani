@@ -13,7 +13,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
   ];
 
   return (
-    <footer className="hairline-t bg-surface/60">
+    <footer className="print:hidden hairline-t bg-surface/60">
       <div className="mx-auto max-w-6xl px-5 md:px-8 py-14 grid gap-12 md:grid-cols-[2fr_1fr_1fr]">
         <div className="flex flex-col gap-5 max-w-sm">
           <div className="flex items-center gap-3">

@@ -21,7 +21,7 @@ export default async function AdminPanelLayout({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 md:px-8 pt-8 pb-24 flex flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 hairline-b pb-5">
+      <div className="print:hidden flex flex-wrap items-center justify-between gap-4 hairline-b pb-5">
         <h1 className="font-heading text-2xl font-light text-text">{dict.admin.title}</h1>
         <nav className="flex items-center gap-6">
           <Link href={`/${locale}/admin`} className="type-label text-text hover:text-accent-light">

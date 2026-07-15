@@ -47,7 +47,7 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
     href === `/${locale}` ? pathname === href : pathname.startsWith(href);
 
   return (
-    <header className="sticky top-0 z-40 bg-bg">
+    <header className="print:hidden sticky top-0 z-40 bg-bg">
       {/* Announcement / utility bar */}
       <div className="bg-accent text-text-on-accent">
         <p className="mx-auto max-w-6xl px-5 py-2 text-center text-sm tracking-wide">

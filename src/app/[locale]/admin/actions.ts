@@ -160,6 +160,20 @@ export async function setArchived(locale: string, id: string, archived: boolean)
   redirect(`/${locale}/admin?saved=1`);
 }
 
+/** Permanently removes an order with its line items, gift add-ons and
+ * payment log. Stock is not restored — deletion is bookkeeping, not a refund. */
+export async function deleteOrder(locale: string, id: string) {
+  await guard(locale);
+  await prisma.$transaction([
+    prisma.orderGiftAddon.deleteMany({ where: { orderId: id } }),
+    prisma.orderItem.deleteMany({ where: { orderId: id } }),
+    prisma.paymentTransaction.deleteMany({ where: { orderId: id } }),
+    prisma.order.delete({ where: { id } }),
+  ]);
+  refresh();
+  redirect(`/${locale}/admin/orders?deleted=1`);
+}
+
 // ── Gift add-ons ──────────────────────────────────────────────
 
 const giftAddonSchema = z.object({

@@ -10,7 +10,7 @@ export function WhatsAppFloat({ label }: { label: string }) {
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="fixed bottom-6 end-6 z-40 flex size-13 items-center justify-center rounded-full bg-bg border border-surface-muted text-accent-light shadow-[0_6px_20px_rgba(14,20,36,0.18)] hover:border-accent-light hover:-translate-y-0.5"
+      className="print:hidden fixed bottom-6 end-6 z-40 flex size-13 items-center justify-center rounded-full bg-bg border border-surface-muted text-accent-light shadow-[0_6px_20px_rgba(14,20,36,0.18)] hover:border-accent-light hover:-translate-y-0.5"
     >
       <IconWhatsApp className="size-6" />
     </a>

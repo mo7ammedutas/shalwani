@@ -1,14 +1,20 @@
+import Link from "next/link";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { prisma } from "@/lib/db";
 import { Price } from "@/components/ui/Price";
+import { PrintButton } from "@/components/admin/PrintButton";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { deleteOrder } from "@/app/[locale]/admin/actions";
 
 export default async function AdminOrdersPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ deleted?: string }>;
 }) {
-  const { locale: raw } = await params;
+  const [{ locale: raw }, notice] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
   const dict = getDictionary(locale);
   const t = dict.admin.orders;
@@ -21,7 +27,19 @@ export default async function AdminOrdersPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="font-heading text-xl text-text">{t.title}</h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="font-heading text-xl text-text">{t.title}</h2>
+        {orders.length > 0 ? <PrintButton label={t.printAll} /> : null}
+      </div>
+      {notice.deleted ? (
+        <p
+          role="status"
+          data-testid="admin-notice"
+          className="print:hidden border border-accent-light bg-surface px-4 py-3 text-sm text-accent-light"
+        >
+          {t.deleted}
+        </p>
+      ) : null}
       {orders.length === 0 ? (
         <p className="py-14 text-center text-text-dim">{t.empty}</p>
       ) : (
@@ -36,6 +54,7 @@ export default async function AdminOrdersPage({
                 <th className="py-3 pe-4 text-start font-normal type-label">{t.colTotal}</th>
                 <th className="py-3 pe-4 text-start font-normal type-label">{t.colStatus}</th>
                 <th className="py-3 text-start font-normal type-label">{t.colDate}</th>
+                <th className="print:hidden py-3 text-start font-normal type-label"></th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +122,23 @@ export default async function AdminOrdersPage({
                   </td>
                   <td className="py-3 text-text-dim tabular" dir="ltr">
                     {o.createdAt.toISOString().slice(0, 16).replace("T", " ")}
+                  </td>
+                  <td className="print:hidden py-3">
+                    <div className="flex items-center justify-end gap-4">
+                      <Link
+                        href={`/${locale}/admin/orders/${o.id}/print`}
+                        className="text-sm text-accent-light underline underline-offset-4"
+                        data-testid={`print-${o.orderNumber}`}
+                      >
+                        {t.print}
+                      </Link>
+                      <DeleteProductButton
+                        action={deleteOrder.bind(null, locale, o.id)}
+                        label={t.delete}
+                        confirmText={t.confirmDelete}
+                        testId={`delete-${o.orderNumber}`}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
