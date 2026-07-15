@@ -21,6 +21,7 @@ export interface ShopQuery {
 export async function getProducts(query: ShopQuery = {}): Promise<Product[]> {
   return prisma.product.findMany({
     where: {
+      archived: false,
       ...(query.color ? { color: query.color } : {}),
       ...(query.embroidery ? { embroidery: query.embroidery } : {}),
       ...(query.price ? { priceBaisa: PRICE_BUCKETS[query.price] } : {}),
@@ -35,12 +36,13 @@ export async function getProducts(query: ShopQuery = {}): Promise<Product[]> {
 }
 
 export async function getProduct(slug: string): Promise<Product | null> {
-  return prisma.product.findUnique({ where: { slug } });
+  const product = await prisma.product.findUnique({ where: { slug } });
+  return product && !product.archived ? product : null;
 }
 
 export async function getFeatured(): Promise<Product[]> {
   return prisma.product.findMany({
-    where: { featured: true },
+    where: { featured: true, archived: false },
     orderBy: { priceBaisa: "desc" },
     take: 5,
   });
@@ -49,6 +51,7 @@ export async function getFeatured(): Promise<Product[]> {
 export async function getRelated(product: Product, take = 3): Promise<Product[]> {
   return prisma.product.findMany({
     where: {
+      archived: false,
       slug: { not: product.slug },
       OR: [{ color: product.color }, { embroidery: product.embroidery }],
     },
@@ -58,7 +61,10 @@ export async function getRelated(product: Product, take = 3): Promise<Product[]>
 
 /** Distinct facet values actually present in the catalogue. */
 export async function getFacets(): Promise<{ colors: string[]; embroideries: string[] }> {
-  const rows = await prisma.product.findMany({ select: { color: true, embroidery: true } });
+  const rows = await prisma.product.findMany({
+    where: { archived: false },
+    select: { color: true, embroidery: true },
+  });
   return {
     colors: [...new Set(rows.map((r) => r.color))],
     embroideries: [...new Set(rows.map((r) => r.embroidery))],

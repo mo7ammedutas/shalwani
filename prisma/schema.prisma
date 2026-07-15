@@ -25,6 +25,7 @@ model Product {
   images        String // JSON array of image paths, primary first
   stock         Int         @default(0)
   featured      Boolean     @default(false)
+  archived      Boolean     @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
   createdAt     DateTime    @default(now())
   orderItems    OrderItem[]
 }

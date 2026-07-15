@@ -52,3 +52,7 @@ prisma/dev.db*
 
 # local design snapshots
 /screenshots/
+
+# merchant-uploaded product images (use blob storage in production)
+/public/uploads/*
+!/public/uploads/.gitkeep
