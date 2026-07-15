@@ -56,3 +56,11 @@ prisma/dev.db*
 # merchant-uploaded product images (use blob storage in production)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+.vercel
+.env*
+
+# local tooling (Vercel CLI, marketplace agent skills)
+/.agents/
+/.claude/
+skills-lock.json
