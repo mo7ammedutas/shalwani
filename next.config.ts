@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     // Served with a sandboxing CSP so SVG can't execute anything.
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Merchant-uploaded product images live in Vercel Blob.
+    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
 };
 

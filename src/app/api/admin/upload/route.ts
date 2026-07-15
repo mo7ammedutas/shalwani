@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { isAdmin } from "@/lib/admin-auth";
 
 const ALLOWED = new Map([
@@ -12,9 +13,10 @@ const ALLOWED = new Map([
 const MAX_BYTES = 5 * 1024 * 1024;
 
 /**
- * Product image upload → public/uploads/.
- * Note for serverless hosting (Vercel): the filesystem there is ephemeral —
- * swap this handler for Vercel Blob / S3 before production (README §Admin).
+ * Product image upload.
+ * - With BLOB_READ_WRITE_TOKEN (Vercel/production): stored in Vercel Blob,
+ *   returns a permanent public CDN URL.
+ * - Without it (local development): written to public/uploads/.
  */
 export async function POST(request: Request) {
   if (!(await isAdmin())) {
@@ -34,16 +36,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "too_large" }, { status: 413 });
   }
 
-  const base = (file.name.split(/[\\/]/).pop() ?? "image")
-    .replace(/\.[^.]*$/, "")
-    .replace(/[^\w-]+/g, "-")
-    .slice(0, 40)
-    .replace(/^-+|-+$/g, "") || "image";
+  const base =
+    (file.name.split(/[\\/]/).pop() ?? "image")
+      .replace(/\.[^.]*$/, "")
+      .replace(/[^\w-]+/g, "-")
+      .slice(0, 40)
+      .replace(/^-+|-+$/g, "") || "image";
   const name = `${Date.now().toString(36)}-${base}${ext}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`products/${name}`, file, {
+      access: "public",
+      contentType: file.type,
+      addRandomSuffix: false,
+    });
+    return NextResponse.json({ path: blob.url });
+  }
 
   const dir = join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, name), Buffer.from(await file.arrayBuffer()));
-
   return NextResponse.json({ path: `/uploads/${name}` });
 }
