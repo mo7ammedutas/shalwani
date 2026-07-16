@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { Price } from "@/components/ui/Price";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { BrandSeal } from "@/components/ui/icons";
+import { requireSection } from "@/lib/admin-guard";
 
 /** Print-friendly invoice for a single order; opens the print dialog on load. */
 export default async function OrderPrintPage({
@@ -15,6 +16,7 @@ export default async function OrderPrintPage({
 }) {
   const { locale: raw, id } = await params;
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "orders");
   const dict = getDictionary(locale);
   const t = dict.admin.orders;
 
@@ -134,6 +136,12 @@ export default async function OrderPrintPage({
           <div className={row}>
             <span className="text-text-dim">{t.shippingFeeLabel}</span>
             <Price baisa={order.shippingFeeBaisa} locale={locale} className="text-text" />
+          </div>
+        ) : null}
+        {order.vatBaisa > 0 ? (
+          <div className={row}>
+            <span className="text-text-dim">{dict.checkout.vatLabel}</span>
+            <Price baisa={order.vatBaisa} locale={locale} className="text-text" />
           </div>
         ) : null}
         <div className={`${row} hairline-t mt-2 pt-4`}>

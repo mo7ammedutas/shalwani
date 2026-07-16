@@ -2,6 +2,7 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { createGiftAddon } from "@/app/[locale]/admin/actions";
 import { GiftAddonForm } from "@/components/admin/GiftAddonForm";
+import { requireSection } from "@/lib/admin-guard";
 
 export default async function NewGiftAddonPage({
   params,
@@ -12,6 +13,7 @@ export default async function NewGiftAddonPage({
 }) {
   const [{ locale: raw }, { error }] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "giftAddons");
   const dict = getDictionary(locale);
 
   return (

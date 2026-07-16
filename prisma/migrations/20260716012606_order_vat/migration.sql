@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Order" ADD COLUMN     "vatBaisa" INTEGER NOT NULL DEFAULT 0;
+

@@ -4,6 +4,7 @@ import { getDictionary } from "@/lib/i18n";
 import { prisma } from "@/lib/db";
 import { updateProduct } from "@/app/[locale]/admin/actions";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { requireSection } from "@/lib/admin-guard";
 
 export default async function EditProductPage({
   params,
@@ -14,6 +15,7 @@ export default async function EditProductPage({
 }) {
   const [{ locale: raw, id }, { error }] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "products");
   const dict = getDictionary(locale);
 
   const product = await prisma.product.findUnique({ where: { id } });

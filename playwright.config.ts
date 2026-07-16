@@ -4,6 +4,10 @@ export default defineConfig({
   testDir: "./tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
   timeout: 60_000,
+  // Dev-mode Turbopack cold-compiles routes on first hit, and several admin
+  // pages now do multiple sequential DB queries per render — the default
+  // 5s assertion timeout is too tight for that, independent of app health.
+  expect: { timeout: 15_000 },
   fullyParallel: false, // tests share one SQLite dev database
   workers: 1,
   retries: process.env.CI ? 1 : 0,

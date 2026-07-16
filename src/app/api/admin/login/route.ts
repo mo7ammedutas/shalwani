@@ -1,23 +1,31 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE, createSessionToken, verifyPassword } from "@/lib/admin-auth";
+import { z } from "zod";
+import { prisma } from "@/lib/db";
+import { verifyPasswordHash } from "@/lib/password";
+import { ADMIN_COOKIE, createSessionToken } from "@/lib/admin-auth";
+
+const schema = z.object({
+  email: z.string().trim().email(),
+  password: z.string().min(1).max(200),
+});
 
 export async function POST(request: Request) {
-  let password = "";
+  let input: z.infer<typeof schema>;
   try {
-    const body = (await request.json()) as { password?: string };
-    password = body.password ?? "";
+    input = schema.parse(await request.json());
   } catch {
     return NextResponse.json({ error: "invalid_input" }, { status: 400 });
   }
 
-  if (!verifyPassword(password)) {
+  const user = await prisma.adminUser.findUnique({ where: { email: input.email.toLowerCase() } });
+  if (!user || !user.active || !verifyPasswordHash(input.password, user.passwordHash)) {
     // Small fixed delay to blunt brute-force guessing
     await new Promise((r) => setTimeout(r, 600));
-    return NextResponse.json({ error: "wrong_password" }, { status: 401 });
+    return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });
   }
 
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_COOKIE, createSessionToken(), {
+  response.cookies.set(ADMIN_COOKIE, createSessionToken(user.id), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

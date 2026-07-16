@@ -18,10 +18,21 @@ export function CheckoutForm({
   locale,
   dict,
   giftAddons,
+  customer,
+  gulfShippingFeeBaisa = SHIPPING_FEE_BAISA.gulf,
+  vatRate = 0,
+  vatRatePercent = 0,
 }: {
   locale: Locale;
   dict: Dictionary;
   giftAddons: GiftAddon[];
+  /** Pre-fills contact fields when the shopper is logged in. */
+  customer?: { name: string; phone: string; email: string | null } | null;
+  /** Merchant-configured (Settings → Shipping & tax); falls back to the
+   * code default so the form still works before any settings are saved. */
+  gulfShippingFeeBaisa?: number;
+  vatRate?: number;
+  vatRatePercent?: number;
 }) {
   const { items, subtotalBaisa, hydrated } = useCart();
   const [errors, setErrors] = useState<Errors>({});
@@ -40,8 +51,9 @@ export function CheckoutForm({
         : 0,
     [isGift, selectedAddonIds, giftAddons],
   );
-  const shippingFee = SHIPPING_FEE_BAISA[shippingZone];
-  const grandTotal = subtotalBaisa + addonsTotal + shippingFee;
+  const shippingFee = shippingZone === "gulf" ? gulfShippingFeeBaisa : SHIPPING_FEE_BAISA.oman;
+  const vatBaisa = Math.round((subtotalBaisa + addonsTotal) * vatRate);
+  const grandTotal = subtotalBaisa + addonsTotal + shippingFee + vatBaisa;
 
   function toggleAddon(id: string) {
     setSelectedAddonIds((prev) =>
@@ -122,6 +134,7 @@ export function CheckoutForm({
               id="co-name"
               name="name"
               autoComplete="name"
+              defaultValue={customer?.name ?? ""}
               placeholder={t.namePlaceholder}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? "co-name-err" : undefined}
@@ -137,6 +150,7 @@ export function CheckoutForm({
               type="tel"
               dir="ltr"
               autoComplete="tel"
+              defaultValue={customer?.phone ?? ""}
               placeholder={t.phonePlaceholder}
               aria-invalid={!!errors.phone}
               aria-describedby={errors.phone ? "co-phone-err" : undefined}
@@ -146,7 +160,14 @@ export function CheckoutForm({
           </div>
           <div>
             <Label htmlFor="co-email">{t.email}</Label>
-            <TextInput id="co-email" name="email" type="email" dir="ltr" autoComplete="email" />
+            <TextInput
+              id="co-email"
+              name="email"
+              type="email"
+              dir="ltr"
+              autoComplete="email"
+              defaultValue={customer?.email ?? ""}
+            />
           </div>
         </fieldset>
 
@@ -197,7 +218,7 @@ export function CheckoutForm({
                     <span className="text-sm text-text-dim">
                       {zone === "oman"
                         ? t.shipping.omanNote
-                        : `${t.shipping.gulfNote} — ${formatOmr(SHIPPING_FEE_BAISA.gulf, locale)}`}
+                        : `${t.shipping.gulfNote} — ${formatOmr(gulfShippingFeeBaisa, locale)}`}
                     </span>
                   </span>
                 </label>
@@ -318,6 +339,16 @@ export function CheckoutForm({
               <span className="text-text-dim">{t.gift.shippingLine}</span>
               <span className="tabular text-text" dir="ltr" data-testid="shipping-fee">
                 {formatOmr(shippingFee, locale)}
+              </span>
+            </div>
+          ) : null}
+          {vatBaisa > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-dim">
+                {t.vatLabel} ({vatRatePercent}%)
+              </span>
+              <span className="tabular text-text" dir="ltr" data-testid="vat-amount">
+                {formatOmr(vatBaisa, locale)}
               </span>
             </div>
           ) : null}

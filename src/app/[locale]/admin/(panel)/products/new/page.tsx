@@ -2,6 +2,7 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { createProduct } from "@/app/[locale]/admin/actions";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { requireSection } from "@/lib/admin-guard";
 
 export default async function NewProductPage({
   params,
@@ -12,6 +13,7 @@ export default async function NewProductPage({
 }) {
   const [{ locale: raw }, { error }] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "products");
   const dict = getDictionary(locale);
 
   return (

@@ -6,6 +6,7 @@ import { Price } from "@/components/ui/Price";
 import { ButtonLink } from "@/components/ui/Button";
 import { deleteGiftAddon, setGiftAddonActive } from "@/app/[locale]/admin/actions";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { requireSection } from "@/lib/admin-guard";
 
 export default async function AdminGiftAddonsPage({
   params,
@@ -16,6 +17,7 @@ export default async function AdminGiftAddonsPage({
 }) {
   const [{ locale: raw }, notice] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "giftAddons");
   const dict = getDictionary(locale);
   const t = dict.admin.giftAddons;
 

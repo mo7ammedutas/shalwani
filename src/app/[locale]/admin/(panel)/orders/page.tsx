@@ -6,6 +6,7 @@ import { Price } from "@/components/ui/Price";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 import { deleteOrder } from "@/app/[locale]/admin/actions";
+import { requireSection } from "@/lib/admin-guard";
 
 export default async function AdminOrdersPage({
   params,
@@ -16,6 +17,7 @@ export default async function AdminOrdersPage({
 }) {
   const [{ locale: raw }, notice] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "orders");
   const dict = getDictionary(locale);
   const t = dict.admin.orders;
 

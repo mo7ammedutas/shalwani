@@ -2,10 +2,10 @@ import { SOCIAL } from "@/lib/i18n/config";
 import { IconWhatsApp } from "@/components/ui/icons";
 
 /** Floating support button — support channel only, never a sales channel. */
-export function WhatsAppFloat({ label }: { label: string }) {
+export function WhatsAppFloat({ label, href = SOCIAL.whatsapp }: { label: string; href?: string }) {
   return (
     <a
-      href={SOCIAL.whatsapp}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}

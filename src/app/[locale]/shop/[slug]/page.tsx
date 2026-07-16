@@ -5,9 +5,12 @@ import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { getProduct, getRelated, productImages } from "@/lib/products";
 import { baisaToOmr } from "@/lib/money";
+import { prisma } from "@/lib/db";
+import { getCurrentCustomer } from "@/lib/customer-auth";
 import { ProductGallery } from "@/components/shop/ProductGallery";
 import { AddToCart } from "@/components/shop/AddToCart";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { WishlistButton } from "@/components/shop/WishlistButton";
 import { Price } from "@/components/ui/Price";
 import { IconArrow } from "@/components/ui/icons";
 
@@ -41,7 +44,18 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [related, images] = await Promise.all([getRelated(product), productImages(product)]);
+  const [related, images, customer] = await Promise.all([
+    getRelated(product),
+    productImages(product),
+    getCurrentCustomer(),
+  ]);
+  const isWishlisted = customer
+    ? Boolean(
+        await prisma.wishlistItem.findUnique({
+          where: { customerId_productId: { customerId: customer.id, productId: product.id } },
+        }),
+      )
+    : false;
   const name = locale === "ar" ? product.nameAr : product.nameEn;
   const description = locale === "ar" ? product.descriptionAr : product.descriptionEn;
   const inStock = product.stock > 0;
@@ -117,17 +131,27 @@ export default async function ProductPage({
             </span>
           </div>
 
-          <AddToCart
-            product={{
-              slug: product.slug,
-              nameAr: product.nameAr,
-              nameEn: product.nameEn,
-              priceBaisa: product.priceBaisa,
-              image: images[0],
-              stock: product.stock,
-            }}
-            labels={dict.product}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <AddToCart
+              product={{
+                slug: product.slug,
+                nameAr: product.nameAr,
+                nameEn: product.nameEn,
+                priceBaisa: product.priceBaisa,
+                image: images[0],
+                stock: product.stock,
+              }}
+              labels={dict.product}
+            />
+            <WishlistButton
+              productId={product.id}
+              initialWishlisted={isWishlisted}
+              isLoggedIn={!!customer}
+              locale={locale}
+              addLabel={dict.account.wishlistAdd}
+              removeLabel={dict.account.wishlistRemove}
+            />
+          </div>
 
           <dl className="hairline-t pt-6 grid grid-cols-2 gap-x-8 gap-y-4 text-sm">
             <div>

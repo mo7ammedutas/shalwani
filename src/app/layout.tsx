@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { Cairo, Poppins } from "next/font/google";
 import "./globals.css";
 import { defaultLocale, dirFor, isLocale, type Locale } from "@/lib/i18n/config";
+import { getSettings } from "@/lib/settings";
+import { ACCENT_PRESETS } from "@/lib/settings-presets";
 
 /* Two-family type system matching the reference theme's Poppins/Gotham
    register: Cairo carries Arabic, Poppins carries Latin. globals.css
@@ -27,8 +29,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale: Locale =
     headerLocale && isLocale(headerLocale) ? headerLocale : defaultLocale;
 
+  const settings = await getSettings();
+  const preset = ACCENT_PRESETS[settings.accentPreset];
+
   return (
     <html lang={locale} dir={dirFor(locale)} className={fontVariables}>
+      <head>
+        {/* Merchant-chosen accent palette (Settings → Branding). Overrides
+            the compiled defaults at the custom-property level, which every
+            Tailwind utility already reads through — no rebuild needed. */}
+        <style>{`:root {
+          --color-accent: ${preset.accent} !important;
+          --color-accent-light: ${preset.accentLight} !important;
+          --color-accent-dark: ${preset.accentDark} !important;
+        }`}</style>
+      </head>
       <body>{children}</body>
     </html>
   );

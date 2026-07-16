@@ -12,12 +12,14 @@ export function AdminLoginForm({ locale, dict }: { locale: Locale; dict: Diction
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setState("busy");
-    const password = String(new FormData(e.currentTarget).get("password") ?? "");
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get("email") ?? "");
+    const password = String(form.get("password") ?? "");
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
         setState("error");
@@ -33,6 +35,18 @@ export function AdminLoginForm({ locale, dict }: { locale: Locale; dict: Diction
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <div>
+        <Label htmlFor="admin-email">{dict.admin.email}</Label>
+        <TextInput
+          id="admin-email"
+          name="email"
+          type="email"
+          dir="ltr"
+          required
+          autoComplete="username"
+          data-testid="admin-email"
+        />
+      </div>
       <div>
         <Label htmlFor="admin-password">{dict.admin.password}</Label>
         <TextInput

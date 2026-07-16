@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { isAdmin } from "@/lib/admin-auth";
+import { requirePerm } from "@/lib/admin-guard";
+import { hashPassword } from "@/lib/password";
+import { isRole } from "@/lib/roles";
 import { omrToBaisa } from "@/lib/money";
-import { isLocale } from "@/lib/i18n/config";
 
 const productSchema = z.object({
   nameAr: z.string().trim().min(2).max(120),
@@ -25,12 +26,6 @@ const productSchema = z.object({
   archived: z.boolean(),
   images: z.array(z.string().trim().min(1).max(500)).min(1).max(8),
 });
-
-async function guard(locale: string) {
-  if (!(await isAdmin())) {
-    redirect(`/${isLocale(locale) ? locale : "ar"}/admin/login`);
-  }
-}
 
 function parseForm(formData: FormData) {
   let images: string[] = [];
@@ -80,7 +75,7 @@ function refresh() {
 }
 
 export async function createProduct(locale: string, formData: FormData) {
-  await guard(locale);
+  await requirePerm(locale, "products.write");
   const parsed = parseForm(formData);
   if (!parsed.success) redirect(`/${locale}/admin/products/new?error=1`);
   const data = parsed.data;
@@ -106,7 +101,7 @@ export async function createProduct(locale: string, formData: FormData) {
 }
 
 export async function updateProduct(locale: string, id: string, formData: FormData) {
-  await guard(locale);
+  await requirePerm(locale, "products.write");
   const parsed = parseForm(formData);
   if (!parsed.success) redirect(`/${locale}/admin/products/${id}?error=1`);
   const data = parsed.data;
@@ -134,7 +129,7 @@ export async function updateProduct(locale: string, id: string, formData: FormDa
 /** Hard-deletes when possible; archives instead when order history exists.
  * redirect() throws internally, so it stays outside the try/catch. */
 export async function deleteProduct(locale: string, id: string) {
-  await guard(locale);
+  await requirePerm(locale, "products.write");
   let outcome: "deleted" | "archived" = "deleted";
   try {
     await prisma.product.delete({ where: { id } });
@@ -154,7 +149,7 @@ export async function deleteProduct(locale: string, id: string) {
 }
 
 export async function setArchived(locale: string, id: string, archived: boolean) {
-  await guard(locale);
+  await requirePerm(locale, "products.write");
   await prisma.product.update({ where: { id }, data: { archived } });
   refresh();
   redirect(`/${locale}/admin?saved=1`);
@@ -163,7 +158,7 @@ export async function setArchived(locale: string, id: string, archived: boolean)
 /** Permanently removes an order with its line items, gift add-ons and
  * payment log. Stock is not restored — deletion is bookkeeping, not a refund. */
 export async function deleteOrder(locale: string, id: string) {
-  await guard(locale);
+  await requirePerm(locale, "orders.write");
   await prisma.$transaction([
     prisma.orderGiftAddon.deleteMany({ where: { orderId: id } }),
     prisma.orderItem.deleteMany({ where: { orderId: id } }),
@@ -216,7 +211,7 @@ async function uniqueAddonSlug(base: string, excludeId?: string): Promise<string
 }
 
 export async function createGiftAddon(locale: string, formData: FormData) {
-  await guard(locale);
+  await requirePerm(locale, "giftAddons.write");
   const parsed = parseGiftAddonForm(formData);
   if (!parsed.success) redirect(`/${locale}/admin/gift-addons/new?error=1`);
   const data = parsed.data;
@@ -235,7 +230,7 @@ export async function createGiftAddon(locale: string, formData: FormData) {
 }
 
 export async function updateGiftAddon(locale: string, id: string, formData: FormData) {
-  await guard(locale);
+  await requirePerm(locale, "giftAddons.write");
   const parsed = parseGiftAddonForm(formData);
   if (!parsed.success) redirect(`/${locale}/admin/gift-addons/${id}?error=1`);
   const data = parsed.data;
@@ -255,7 +250,7 @@ export async function updateGiftAddon(locale: string, id: string, formData: Form
 
 /** Hard-deletes when possible; deactivates instead when order history exists. */
 export async function deleteGiftAddon(locale: string, id: string) {
-  await guard(locale);
+  await requirePerm(locale, "giftAddons.write");
   let outcome: "deleted" | "deactivated" = "deleted";
   try {
     await prisma.giftAddon.delete({ where: { id } });
@@ -275,8 +270,138 @@ export async function deleteGiftAddon(locale: string, id: string) {
 }
 
 export async function setGiftAddonActive(locale: string, id: string, active: boolean) {
-  await guard(locale);
+  await requirePerm(locale, "giftAddons.write");
   await prisma.giftAddon.update({ where: { id }, data: { active } });
   refresh();
   redirect(`/${locale}/admin/gift-addons?saved=1`);
+}
+
+// ── CRM ───────────────────────────────────────────────────────
+
+export async function updateCustomerNotes(locale: string, id: string, formData: FormData) {
+  await requirePerm(locale, "crm.write");
+  const notes = String(formData.get("notes") ?? "").trim().slice(0, 4000);
+  await prisma.customer.update({ where: { id }, data: { notes: notes || null } });
+  refresh();
+  redirect(`/${locale}/admin/customers/${id}?saved=1`);
+}
+
+// ── Staff ─────────────────────────────────────────────────────
+
+const staffSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().max(200), // may be blank on edit (keep current)
+  role: z.string(),
+  active: z.boolean(),
+});
+
+function parseStaffForm(formData: FormData) {
+  return staffSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password") ?? "",
+    role: formData.get("role"),
+    active: formData.get("active") === "on",
+  });
+}
+
+export async function createStaff(locale: string, formData: FormData) {
+  await requirePerm(locale, "staff.write");
+  const parsed = parseStaffForm(formData);
+  if (!parsed.success || !isRole(parsed.data.role) || parsed.data.password.length < 8) {
+    redirect(`/${locale}/admin/staff/new?error=1`);
+  }
+  const data = parsed.data;
+
+  const existing = await prisma.adminUser.findUnique({ where: { email: data.email } });
+  if (existing) redirect(`/${locale}/admin/staff/new?error=email`);
+
+  await prisma.adminUser.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      passwordHash: hashPassword(data.password),
+      role: data.role,
+      active: data.active,
+    },
+  });
+  redirect(`/${locale}/admin/staff?saved=1`);
+}
+
+export async function updateStaff(locale: string, id: string, formData: FormData) {
+  const me = await requirePerm(locale, "staff.write");
+  const parsed = parseStaffForm(formData);
+  if (!parsed.success || !isRole(parsed.data.role)) {
+    redirect(`/${locale}/admin/staff/${id}?error=1`);
+  }
+  const data = parsed.data;
+
+  if (id === me.id && (!data.active || data.role !== me.role)) {
+    // Prevent locking yourself out: can't disable or demote your own account.
+    redirect(`/${locale}/admin/staff/${id}?error=self`);
+  }
+
+  const existing = await prisma.adminUser.findUnique({ where: { email: data.email } });
+  if (existing && existing.id !== id) redirect(`/${locale}/admin/staff/${id}?error=email`);
+
+  if (data.password && data.password.length > 0 && data.password.length < 8) {
+    redirect(`/${locale}/admin/staff/${id}?error=1`);
+  }
+
+  await prisma.adminUser.update({
+    where: { id },
+    data: {
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      active: data.active,
+      ...(data.password ? { passwordHash: hashPassword(data.password) } : {}),
+    },
+  });
+  redirect(`/${locale}/admin/staff?saved=1`);
+}
+
+export async function deleteStaff(locale: string, id: string) {
+  const me = await requirePerm(locale, "staff.write");
+  if (id === me.id) redirect(`/${locale}/admin/staff?error=self`);
+  await prisma.adminUser.delete({ where: { id } });
+  redirect(`/${locale}/admin/staff?deleted=1`);
+}
+
+export async function setStaffActive(locale: string, id: string, active: boolean) {
+  const me = await requirePerm(locale, "staff.write");
+  if (id === me.id && !active) redirect(`/${locale}/admin/staff?error=self`);
+  await prisma.adminUser.update({ where: { id }, data: { active } });
+  redirect(`/${locale}/admin/staff?saved=1`);
+}
+
+// ── Settings ──────────────────────────────────────────────────
+
+export async function updateSettings(locale: string, formData: FormData) {
+  await requirePerm(locale, "settings.write");
+
+  const logoUrl = String(formData.get("logoUrl") ?? "").trim();
+  const accentPreset = String(formData.get("accentPreset") ?? "midnight");
+  const contactEmail = String(formData.get("contactEmail") ?? "").trim();
+  const whatsappUrl = String(formData.get("whatsappUrl") ?? "").trim();
+  const vatRatePercent = String(formData.get("vatRatePercent") ?? "0").trim();
+  const gulfShippingFeeOmr = String(formData.get("gulfShippingFeeOmr") ?? "").trim();
+
+  const entries: [string, string][] = [
+    ["logoUrl", logoUrl],
+    ["accentPreset", accentPreset],
+    ["contactEmail", contactEmail],
+    ["whatsappUrl", whatsappUrl],
+    ["vatRatePercent", vatRatePercent],
+    ["gulfShippingFeeOmr", gulfShippingFeeOmr],
+  ];
+
+  await prisma.$transaction(
+    entries.map(([key, value]) =>
+      prisma.setting.upsert({ where: { key }, update: { value }, create: { key, value } }),
+    ),
+  );
+  refresh();
+  redirect(`/${locale}/admin/settings?saved=1`);
 }

@@ -1,6 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import { randomBytes, scryptSync } from "node:crypto";
 
 const prisma = new PrismaClient();
+
+/** Matches the "<saltHex>:<hashHex>" format read by src/lib/password.ts —
+ * duplicated here (rather than imported) so this script has no dependency
+ * on the "server-only"-tagged app modules. */
+function hashPassword(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 64);
+  return `${salt.toString("hex")}:${hash.toString("hex")}`;
+}
 
 /**
  * Placeholder catalogue — realistic structure and OMR pricing, awaiting the
@@ -170,6 +180,31 @@ async function main() {
     await prisma.giftAddon.upsert({ where: { slug: a.slug }, update: a, create: a });
   }
   console.log(`Seeded ${giftAddons.length} gift add-ons.`);
+
+  // One-time bootstrap of the first "admin" role staff account, using the
+  // legacy ADMIN_PASSWORD env var. Never overwrites an existing account,
+  // so a password changed later via /admin/staff survives re-seeding.
+  const bootstrapEmail = (process.env.ADMIN_EMAIL || "owner@shalwani.om").toLowerCase();
+  const bootstrapPassword = process.env.ADMIN_PASSWORD;
+  if (bootstrapPassword) {
+    const existingCount = await prisma.adminUser.count();
+    if (existingCount === 0) {
+      await prisma.adminUser.create({
+        data: {
+          name: "Owner",
+          email: bootstrapEmail,
+          passwordHash: hashPassword(bootstrapPassword),
+          role: "admin",
+          active: true,
+        },
+      });
+      console.log(`Bootstrapped admin account: ${bootstrapEmail}`);
+    } else {
+      console.log("Staff accounts already exist — skipping admin bootstrap.");
+    }
+  } else {
+    console.warn("ADMIN_PASSWORD not set — skipped admin account bootstrap.");
+  }
 }
 
 main()

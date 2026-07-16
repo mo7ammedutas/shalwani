@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-// Matches the dev/test value in .env; override via env when running elsewhere.
+// Matches the seed-bootstrapped owner account; override via env when running elsewhere.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "owner@shalwani.om";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "shalwani-2026";
 
 // 1×1 transparent PNG for upload tests
@@ -11,6 +12,7 @@ const PNG = Buffer.from(
 
 async function login(page: import("@playwright/test").Page) {
   await page.goto("/ar/admin/login");
+  await page.getByTestId("admin-email").fill(ADMIN_EMAIL);
   await page.getByTestId("admin-password").fill(ADMIN_PASSWORD);
   await page.getByTestId("admin-login").click();
   await expect(page).toHaveURL(/\/ar\/admin$/);
@@ -21,6 +23,7 @@ test.describe("admin panel", () => {
     await page.goto("/ar/admin");
     await expect(page).toHaveURL(/\/ar\/admin\/login$/);
 
+    await page.getByTestId("admin-email").fill(ADMIN_EMAIL);
     await page.getByTestId("admin-password").fill("wrong-password");
     await page.getByTestId("admin-login").click();
     await expect(page.getByRole("alert")).toBeVisible();

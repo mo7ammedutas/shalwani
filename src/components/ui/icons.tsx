@@ -86,6 +86,26 @@ export function IconPlus(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconUser(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" />
+    </svg>
+  );
+}
+
+export function IconHeart({
+  filled = false,
+  ...props
+}: SVGProps<SVGSVGElement> & { filled?: boolean }) {
+  return (
+    <svg {...base(props)} fill={filled ? "currentColor" : "none"}>
+      <path d="M12 20s-7-4.35-9.5-8.8C.9 8 2.2 4.5 5.6 4A5 5 0 0 1 12 7.2 5 5 0 0 1 18.4 4c3.4.5 4.7 4 3.1 7.2C19 15.65 12 20 12 20Z" />
+    </svg>
+  );
+}
+
 /** Brand seal: the diamond stitch used across the identity. */
 export function BrandSeal(props: SVGProps<SVGSVGElement>) {
   return (

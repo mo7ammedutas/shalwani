@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { isLocale, locales, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { CartProvider } from "@/lib/cart";
+import { getSettings } from "@/lib/settings";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
+import { VisitBeacon } from "@/components/layout/VisitBeacon";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 
 export function generateStaticParams() {
@@ -59,11 +61,13 @@ export default async function LocaleLayout({
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
   const dict = getDictionary(locale);
+  const settings = await getSettings();
 
   const headerLabels = {
     brandName: dict.brand.name,
     brandLatin: dict.brand.nameLatin,
     announcement: dict.header.announcement,
+    logoUrl: settings.logoUrl,
     nav: [
       { href: `/${locale}`, label: dict.nav.home },
       { href: `/${locale}/shop`, label: dict.nav.shop },
@@ -72,6 +76,7 @@ export default async function LocaleLayout({
       { href: `/${locale}/contact`, label: dict.nav.contact },
     ],
     cart: dict.header.cart,
+    account: dict.header.account,
     switchLocale: dict.header.switchLocale,
     switchLocaleLabel: dict.header.switchLocaleLabel,
     openMenu: dict.header.openMenu,
@@ -88,11 +93,12 @@ export default async function LocaleLayout({
         {dict.a11y.skipToContent}
       </a>
       <CartProvider>
+        <VisitBeacon />
         <Header locale={locale} labels={headerLabels} />
         <main id="content">{children}</main>
-        <Footer locale={locale} dict={dict} />
+        <Footer locale={locale} dict={dict} whatsappUrl={settings.whatsappUrl} />
         <CartDrawer locale={locale} labels={dict.cart} />
-        <WhatsAppFloat label={dict.whatsappFloat} />
+        <WhatsAppFloat label={dict.whatsappFloat} href={settings.whatsappUrl} />
       </CartProvider>
     </>
   );

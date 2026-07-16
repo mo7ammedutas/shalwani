@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { otherLocale, type Locale } from "@/lib/i18n/config";
-import { IconBag, IconClose, IconMenu } from "@/components/ui/icons";
+import { IconBag, IconClose, IconMenu, IconUser } from "@/components/ui/icons";
 
 export interface HeaderLabels {
   brandName: string;
   brandLatin: string;
   announcement: string;
+  logoUrl?: string;
   nav: { href: string; label: string }[];
   cart: string;
+  account: string;
   switchLocale: string;
   switchLocaleLabel: string;
   openMenu: string;
@@ -83,20 +86,34 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
             </a>
           </div>
 
-          {/* Centred stacked wordmark */}
+          {/* Centred logo — merchant-uploaded image if set, else the
+              stacked text wordmark. */}
           <Link
             href={`/${locale}`}
             className="justify-self-center flex flex-col items-center gap-0.5 text-text hover:text-accent-light"
           >
-            <span lang="ar" className="font-display text-3xl font-bold leading-none">
-              شالواني
-            </span>
-            <span
-              lang="en"
-              className="font-display text-[0.6rem] font-light tracking-[0.5em] uppercase text-text-dim ps-[0.5em]"
-            >
-              Shalwani
-            </span>
+            {labels.logoUrl ? (
+              <Image
+                src={labels.logoUrl}
+                alt={labels.brandName}
+                width={44}
+                height={44}
+                className="h-11 w-auto object-contain"
+                priority
+              />
+            ) : (
+              <>
+                <span lang="ar" className="font-display text-3xl font-bold leading-none">
+                  شالواني
+                </span>
+                <span
+                  lang="en"
+                  className="font-display text-[0.6rem] font-light tracking-[0.5em] uppercase text-text-dim ps-[0.5em]"
+                >
+                  Shalwani
+                </span>
+              </>
+            )}
           </Link>
 
           <div className="flex items-center gap-1 justify-self-end">
@@ -109,6 +126,14 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
             >
               {labels.switchLocale}
             </a>
+            <Link
+              href={`/${locale}/account`}
+              aria-label={labels.account}
+              data-testid="account-link"
+              className="p-2 text-text hover:text-accent-light"
+            >
+              <IconUser className="size-5" />
+            </Link>
             <button
               type="button"
               onClick={openCart}

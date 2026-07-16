@@ -2,43 +2,61 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 beforeAll(() => {
   process.env.AUTH_SECRET = "unit-test-secret";
-  process.env.ADMIN_PASSWORD = "unit-test-password";
 });
 
-// admin-auth imports `server-only` and next/headers; pull the pure pieces
-// via dynamic import after env is set, with the server-only shim below.
+// admin-auth imports `server-only`, next/headers and the Prisma client;
+// pull the pure token functions via dynamic import after env is set, with
+// the shims in tests/shims/ covering the non-pure imports.
 async function lib() {
   return await import("@/lib/admin-auth");
 }
 
+const USER_ID = "usr_test123";
+
 describe("admin session tokens", () => {
   it("round-trips a freshly issued token", async () => {
     const { createSessionToken, verifySessionToken } = await lib();
-    const token = createSessionToken();
-    expect(verifySessionToken(token)).toBe(true);
+    const token = createSessionToken(USER_ID);
+    expect(verifySessionToken(token)).toBe(USER_ID);
   });
 
   it("rejects expired tokens", async () => {
     const { createSessionToken, verifySessionToken } = await lib();
     const twoWeeksAgo = Date.now() - 14 * 24 * 3600_000;
-    const token = createSessionToken(twoWeeksAgo);
-    expect(verifySessionToken(token)).toBe(false);
+    const token = createSessionToken(USER_ID, twoWeeksAgo);
+    expect(verifySessionToken(token)).toBeNull();
   });
 
   it("rejects tampered expiry and signature", async () => {
     const { createSessionToken, verifySessionToken } = await lib();
-    const token = createSessionToken();
-    const [expires, signature] = token.split(".");
-    expect(verifySessionToken(`${Number(expires) + 9999999}.${signature}`)).toBe(false);
-    expect(verifySessionToken(`${expires}.${signature.slice(0, -2)}xx`)).toBe(false);
-    expect(verifySessionToken("garbage")).toBe(false);
-    expect(verifySessionToken(undefined)).toBe(false);
+    const token = createSessionToken(USER_ID);
+    const [id, expires, signature] = token.split(".");
+    expect(verifySessionToken(`${id}.${Number(expires) + 9999999}.${signature}`)).toBeNull();
+    expect(verifySessionToken(`${id}.${expires}.${signature.slice(0, -2)}xx`)).toBeNull();
+    expect(verifySessionToken("garbage")).toBeNull();
+    expect(verifySessionToken(undefined)).toBeNull();
   });
 
-  it("verifies the admin password with constant-time comparison semantics", async () => {
-    const { verifyPassword } = await lib();
-    expect(verifyPassword("unit-test-password")).toBe(true);
-    expect(verifyPassword("unit-test-password!")).toBe(false);
-    expect(verifyPassword("")).toBe(false);
+  it("distinguishes tokens issued for different users", async () => {
+    const { createSessionToken, verifySessionToken } = await lib();
+    const tokenA = createSessionToken("usr_a");
+    const tokenB = createSessionToken("usr_b");
+    expect(verifySessionToken(tokenA)).toBe("usr_a");
+    expect(verifySessionToken(tokenB)).toBe("usr_b");
+  });
+});
+
+describe("password hashing", () => {
+  it("verifies a matching password and rejects a wrong one", async () => {
+    const { hashPassword, verifyPasswordHash } = await import("@/lib/password");
+    const stored = hashPassword("correct-horse-battery-staple");
+    expect(verifyPasswordHash("correct-horse-battery-staple", stored)).toBe(true);
+    expect(verifyPasswordHash("wrong-password", stored)).toBe(false);
+  });
+
+  it("rejects malformed stored hashes safely", async () => {
+    const { verifyPasswordHash } = await import("@/lib/password");
+    expect(verifyPasswordHash("anything", "not-a-valid-hash")).toBe(false);
+    expect(verifyPasswordHash("anything", "")).toBe(false);
   });
 });

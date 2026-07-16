@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
-import { isAdmin } from "@/lib/admin-auth";
+import { getCurrentAdmin } from "@/lib/admin-auth";
+import { canView, SECTION_PATH, type Section } from "@/lib/roles";
 import { AdminLogout } from "@/components/admin/AdminLogout";
 
 export const metadata = { robots: { index: false } };
@@ -16,33 +17,45 @@ export default async function AdminPanelLayout({
 }) {
   const { locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : "ar";
-  if (!(await isAdmin())) redirect(`/${locale}/admin/login`);
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect(`/${locale}/admin/login`);
   const dict = getDictionary(locale);
+  const t = dict.admin;
+
+  const allNavItems: { section: Section; label: string }[] = [
+    { section: "products" as Section, label: t.navProducts },
+    { section: "giftAddons" as Section, label: t.navGiftAddons },
+    { section: "orders" as Section, label: t.navOrders },
+    { section: "customers" as Section, label: t.navCustomers },
+    { section: "analytics" as Section, label: t.navAnalytics },
+    { section: "staff" as Section, label: t.navStaff },
+    { section: "settings" as Section, label: t.navSettings },
+  ];
+  const navItems = allNavItems.filter((item) => canView(admin.role, item.section));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 md:px-8 pt-8 pb-24 flex flex-col gap-8">
       <div className="print:hidden flex flex-wrap items-center justify-between gap-4 hairline-b pb-5">
-        <h1 className="font-heading text-2xl font-light text-text">{dict.admin.title}</h1>
-        <nav className="flex items-center gap-6">
-          <Link href={`/${locale}/admin`} className="type-label text-text hover:text-accent-light">
-            {dict.admin.navProducts}
-          </Link>
-          <Link
-            href={`/${locale}/admin/gift-addons`}
-            className="type-label text-text hover:text-accent-light"
-          >
-            {dict.admin.navGiftAddons}
-          </Link>
-          <Link
-            href={`/${locale}/admin/orders`}
-            className="type-label text-text hover:text-accent-light"
-          >
-            {dict.admin.navOrders}
-          </Link>
+        <div>
+          <h1 className="font-heading text-2xl font-light text-text">{t.title}</h1>
+          <p className="text-xs text-text-dim">
+            {admin.name} · {t.staff.roles[admin.role] ?? admin.role}
+          </p>
+        </div>
+        <nav className="flex flex-wrap items-center gap-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.section}
+              href={`/${locale}/admin/${SECTION_PATH[item.section]}`}
+              className="type-label text-text hover:text-accent-light"
+            >
+              {item.label}
+            </Link>
+          ))}
           <Link href={`/${locale}`} className="type-label text-text-dim hover:text-accent-light">
-            {dict.admin.backToStore}
+            {t.backToStore}
           </Link>
-          <AdminLogout locale={locale} label={dict.admin.logout} />
+          <AdminLogout locale={locale} label={t.logout} />
         </nav>
       </div>
       {children}

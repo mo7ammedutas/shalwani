@@ -3,6 +3,7 @@ import Link from "next/link";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { prisma } from "@/lib/db";
+import { requireSection } from "@/lib/admin-guard";
 import { productImagesClient } from "@/lib/product-images";
 import { Price } from "@/components/ui/Price";
 import { ButtonLink } from "@/components/ui/Button";
@@ -18,6 +19,7 @@ export default async function AdminProductsPage({
 }) {
   const [{ locale: raw }, notice] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
+  await requireSection(locale, "products");
   const dict = getDictionary(locale);
   const t = dict.admin.products;
 

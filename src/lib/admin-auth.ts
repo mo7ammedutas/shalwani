@@ -1,11 +1,16 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/db";
+import { isRole, type Role } from "@/lib/roles";
 
 /**
- * Single-merchant admin auth: ADMIN_PASSWORD unlocks a signed, expiring
- * session token stored in an HTTP-only cookie. No accounts, no database —
- * exactly enough for one shop owner.
+ * Staff auth: each AdminUser has an email + password (scrypt-hashed) and a
+ * role. A signed, expiring session token carries the user's id; the cookie
+ * itself is opaque, so the token can't be tampered with, but revoking a
+ * single user (deactivate/delete) takes effect immediately because we
+ * re-load the row from the database on every check rather than trusting a
+ * stateless claim.
  */
 
 export const ADMIN_COOKIE = "shalwani_admin";
@@ -21,32 +26,45 @@ function sign(payload: string): string {
   return createHmac("sha256", secret()).update(payload).digest("base64url");
 }
 
-export function createSessionToken(now = Date.now()): string {
+export function createSessionToken(adminUserId: string, now = Date.now()): string {
   const expires = now + SESSION_HOURS * 3600_000;
-  return `${expires}.${sign(String(expires))}`;
+  const payload = `${adminUserId}.${expires}`;
+  return `${payload}.${sign(payload)}`;
 }
 
-export function verifySessionToken(token: string | undefined, now = Date.now()): boolean {
-  if (!token) return false;
-  const [expires, signature] = token.split(".");
-  if (!expires || !signature) return false;
-  if (!/^\d+$/.test(expires) || Number(expires) < now) return false;
-  const expected = sign(expires);
+/** Returns the admin user id encoded in a valid, unexpired token — or null. */
+export function verifySessionToken(token: string | undefined, now = Date.now()): string | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [adminUserId, expires, signature] = parts;
+  if (!adminUserId || !/^\d+$/.test(expires) || Number(expires) < now) return null;
+  const expected = sign(`${adminUserId}.${expires}`);
   const a = Buffer.from(signature);
   const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  return adminUserId;
 }
 
-export function verifyPassword(candidate: string): boolean {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) return false;
-  const a = Buffer.from(candidate);
-  const b = Buffer.from(password);
-  return a.length === b.length && timingSafeEqual(a, b);
+export interface CurrentAdmin {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
 }
 
-/** True when the current request carries a valid admin session. */
-export async function isAdmin(): Promise<boolean> {
+/** Verifies the session and loads the staff account fresh from the
+ * database — a deactivated or deleted account loses access immediately. */
+export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
   const token = (await cookies()).get(ADMIN_COOKIE)?.value;
-  return verifySessionToken(token);
+  const id = verifySessionToken(token);
+  if (!id) return null;
+  const user = await prisma.adminUser.findUnique({ where: { id } });
+  if (!user || !user.active || !isRole(user.role)) return null;
+  return { id: user.id, name: user.name, email: user.email, role: user.role };
+}
+
+/** Convenience boolean for call sites that only need to know "logged in". */
+export async function isAdmin(): Promise<boolean> {
+  return (await getCurrentAdmin()) !== null;
 }

@@ -3,7 +3,15 @@ import { SOCIAL, type Locale } from "@/lib/i18n/config";
 import { fill, type Dictionary } from "@/lib/i18n";
 import { IconInstagram, IconWhatsApp, BrandSeal } from "@/components/ui/icons";
 
-export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function Footer({
+  locale,
+  dict,
+  whatsappUrl = SOCIAL.whatsapp,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  whatsappUrl?: string;
+}) {
   const year = new Date().getFullYear();
   const nav = [
     { href: `/${locale}/shop`, label: dict.nav.shop },
@@ -65,7 +73,7 @@ export function Footer({ locale, dict }: { locale: Locale; dict: Dictionary }) {
             </li>
             <li>
               <a
-                href={SOCIAL.whatsapp}
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2.5 text-text hover:text-accent-light"

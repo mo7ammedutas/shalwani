@@ -27,15 +27,30 @@ model Product {
   archived      Boolean     @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
   createdAt     DateTime    @default(now())
   orderItems    OrderItem[]
+  wishlistedBy  WishlistItem[]
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  phone     String   @unique
-  email     String?
-  createdAt DateTime @default(now())
-  orders    Order[]
+  id           String         @id @default(cuid())
+  name         String
+  phone        String         @unique
+  email        String?
+  passwordHash String? // set once the customer registers; null = guest-only record
+  notes        String? // admin-only CRM note, never shown to the customer
+  createdAt    DateTime       @default(now())
+  orders       Order[]
+  wishlist     WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, productId])
 }
 
 model Order {
@@ -55,6 +70,7 @@ model Order {
   shippingZone         String               @default("oman") // "oman" | "gulf"
   shippingFeeBaisa     Int                  @default(0)
   giftAddonsTotalBaisa Int                  @default(0)
+  vatBaisa             Int                  @default(0)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
   items                OrderItem[]
@@ -121,4 +137,30 @@ model ContactMessage {
   phone     String
   message   String
   createdAt DateTime @default(now())
+}
+
+/** Staff account — replaces the single shared ADMIN_PASSWORD. */
+model AdminUser {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String // "admin" | "manager" | "support" | "content" | "warehouse"
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+/** Simple key/value store editable from /admin/settings — string or
+ * JSON.stringify'd structured values, read at runtime instead of hardcoded
+ * constants for logo, contact channels, tax and shipping. */
+model Setting {
+  key   String @id
+  value String
+}
+
+/** One row per calendar day, incremented by a storefront beacon.
+ * Powers an approximate conversion-rate metric in analytics. */
+model PageView {
+  day   String @id // "YYYY-MM-DD"
+  count Int    @default(0)
 }

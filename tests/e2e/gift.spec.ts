@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "owner@shalwani.om";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "shalwani-2026";
 
 test.describe("gift checkout", () => {
@@ -97,6 +98,7 @@ test.describe("gift checkout", () => {
 test.describe("admin gift add-ons", () => {
   async function login(page: import("@playwright/test").Page) {
     await page.goto("/ar/admin/login");
+    await page.getByTestId("admin-email").fill(ADMIN_EMAIL);
     await page.getByTestId("admin-password").fill(ADMIN_PASSWORD);
     await page.getByTestId("admin-login").click();
     await expect(page).toHaveURL(/\/ar\/admin$/);

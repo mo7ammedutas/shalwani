@@ -1,0 +1,35 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { isLocale, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n";
+import { getCurrentCustomer } from "@/lib/customer-auth";
+import { RegisterForm } from "@/components/account/RegisterForm";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const dict = getDictionary(isLocale((await params).locale) ? (await params).locale as Locale : "ar");
+  return { title: dict.account.registerTitle, robots: { index: false } };
+}
+
+export default async function AccountRegisterPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale: raw } = await params;
+  const locale: Locale = isLocale(raw) ? raw : "ar";
+  if (await getCurrentCustomer()) redirect(`/${locale}/account`);
+  const dict = getDictionary(locale);
+
+  return (
+    <div className="mx-auto flex max-w-sm flex-col gap-8 px-5 pt-16 pb-28">
+      <h1 className="font-heading text-3xl font-light text-text text-center">
+        {dict.account.registerTitle}
+      </h1>
+      <RegisterForm locale={locale} dict={dict} />
+    </div>
+  );
+}
