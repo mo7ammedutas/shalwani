@@ -27,6 +27,8 @@ export default async function AdminPanelLayout({
     { section: "giftAddons" as Section, label: t.navGiftAddons },
     { section: "orders" as Section, label: t.navOrders },
     { section: "customers" as Section, label: t.navCustomers },
+    { section: "coupons" as Section, label: t.navCoupons },
+    { section: "reviews" as Section, label: t.navReviews },
     { section: "analytics" as Section, label: t.navAnalytics },
     { section: "staff" as Section, label: t.navStaff },
     { section: "settings" as Section, label: t.navSettings },
@@ -52,6 +54,12 @@ export default async function AdminPanelLayout({
               {item.label}
             </Link>
           ))}
+          <Link
+            href={`/${locale}/admin/security`}
+            className="type-label text-text-dim hover:text-accent-light"
+          >
+            {t.navSecurity}
+          </Link>
           <Link href={`/${locale}`} className="type-label text-text-dim hover:text-accent-light">
             {t.backToStore}
           </Link>

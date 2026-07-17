@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyOrderPayment } from "@/lib/orders";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 /**
  * Thawani webhook endpoint (configure the URL in the Thawani dashboard).
@@ -12,6 +13,10 @@ import { verifyOrderPayment } from "@/lib/orders";
  * auditing.
  */
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("webhook", clientIp(request)))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();

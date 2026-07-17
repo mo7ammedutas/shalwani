@@ -14,6 +14,15 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 type Errors = Partial<Record<"name" | "phone" | "address" | "form", string>>;
 
+interface CouponQuote {
+  code: string;
+  kind: string;
+  discountBaisa: number;
+  freeShipping: boolean;
+}
+
+const POINT_VALUE_BAISA = 10; // keep in sync with @/lib/loyalty
+
 export function CheckoutForm({
   locale,
   dict,
@@ -27,7 +36,7 @@ export function CheckoutForm({
   dict: Dictionary;
   giftAddons: GiftAddon[];
   /** Pre-fills contact fields when the shopper is logged in. */
-  customer?: { name: string; phone: string; email: string | null } | null;
+  customer?: { name: string; phone: string; email: string | null; loyaltyPoints?: number } | null;
   /** Merchant-configured (Settings → Shipping & tax); falls back to the
    * code default so the form still works before any settings are saved. */
   gulfShippingFeeBaisa?: number;
@@ -40,7 +49,14 @@ export function CheckoutForm({
   const [shippingZone, setShippingZone] = useState<ShippingZone>("oman");
   const [isGift, setIsGift] = useState(false);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponQuote, setCouponQuote] = useState<CouponQuote | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [redeemPoints, setRedeemPoints] = useState(false);
   const t = dict.checkout;
+
+  const loyaltyBalance = customer?.loyaltyPoints ?? 0;
 
   const addonsTotal = useMemo(
     () =>
@@ -51,9 +67,51 @@ export function CheckoutForm({
         : 0,
     [isGift, selectedAddonIds, giftAddons],
   );
-  const shippingFee = shippingZone === "gulf" ? gulfShippingFeeBaisa : SHIPPING_FEE_BAISA.oman;
-  const vatBaisa = Math.round((subtotalBaisa + addonsTotal) * vatRate);
-  const grandTotal = subtotalBaisa + addonsTotal + shippingFee + vatBaisa;
+  const goodsSubtotal = subtotalBaisa + addonsTotal;
+  // Mirror of the server's discount math — the server recomputes everything.
+  const couponDiscount = couponQuote ? Math.min(couponQuote.discountBaisa, goodsSubtotal) : 0;
+  const loyaltyDiscount = redeemPoints
+    ? Math.min(loyaltyBalance * POINT_VALUE_BAISA, goodsSubtotal - couponDiscount)
+    : 0;
+  const discountedGoods = goodsSubtotal - couponDiscount - loyaltyDiscount;
+  const shippingFee = couponQuote?.freeShipping
+    ? 0
+    : shippingZone === "gulf"
+      ? gulfShippingFeeBaisa
+      : SHIPPING_FEE_BAISA.oman;
+  const vatBaisa = Math.round(discountedGoods * vatRate);
+  const grandTotal = discountedGoods + shippingFee + vatBaisa;
+
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponBusy(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotalBaisa: goodsSubtotal }),
+      });
+      const data = (await res.json()) as
+        | { ok: true; code: string; kind: string; discountBaisa: number; freeShipping: boolean }
+        | { ok: false; reason?: string };
+      if (!("ok" in data) || !data.ok) {
+        setCouponQuote(null);
+        setCouponError(
+          t.coupon.errors[("reason" in data && data.reason) || "not_found"] ??
+            t.coupon.errors.not_found,
+        );
+        return;
+      }
+      setCouponQuote(data);
+    } catch {
+      setCouponQuote(null);
+      setCouponError(t.coupon.errors.not_found);
+    } finally {
+      setCouponBusy(false);
+    }
+  }
 
   function toggleAddon(id: string) {
     setSelectedAddonIds((prev) =>
@@ -106,6 +164,8 @@ export function CheckoutForm({
           giftMessage: isGift ? giftMessage : undefined,
           recipientName: isGift ? recipientName : undefined,
           giftAddonIds: isGift ? selectedAddonIds : [],
+          couponCode: couponQuote?.code,
+          redeemPoints,
         }),
       });
       const data = (await res.json()) as { redirectUrl?: string; error?: string };
@@ -319,6 +379,75 @@ export function CheckoutForm({
           })}
         </ul>
 
+        {/* Coupon */}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="co-coupon">{t.coupon.label}</Label>
+          {couponQuote ? (
+            <div className="flex items-center justify-between gap-3 border border-accent-light px-3 py-2.5 text-sm">
+              <span className="text-accent-light">
+                {t.coupon.applied}: <span dir="ltr" className="tabular">{couponQuote.code}</span>
+                {couponQuote.freeShipping ? ` — ${t.coupon.freeShippingNote}` : ""}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCouponQuote(null);
+                  setCouponInput("");
+                }}
+                className="text-text-dim underline underline-offset-4 cursor-pointer"
+                data-testid="coupon-remove"
+              >
+                {t.coupon.remove}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <TextInput
+                id="co-coupon"
+                dir="ltr"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                placeholder={t.coupon.placeholder}
+                className="uppercase"
+                data-testid="coupon-input"
+              />
+              <Button
+                type="button"
+                variant="quiet"
+                onClick={applyCoupon}
+                disabled={couponBusy || !couponInput.trim()}
+                data-testid="coupon-apply"
+              >
+                {t.coupon.apply}
+              </Button>
+            </div>
+          )}
+          {couponError ? (
+            <p role="alert" className="text-sm text-accent-secondary" data-testid="coupon-error">
+              {couponError}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Loyalty redemption */}
+        {customer && loyaltyBalance > 0 ? (
+          <label className="flex items-start gap-3 text-sm cursor-pointer" data-testid="loyalty-toggle-label">
+            <input
+              type="checkbox"
+              checked={redeemPoints}
+              onChange={(e) => setRedeemPoints(e.target.checked)}
+              className="mt-0.5 size-4 accent-[var(--color-accent)]"
+              data-testid="loyalty-toggle"
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-text">{t.loyalty.toggle}</span>
+              <span className="text-text-dim">
+                {t.loyalty.balance.replace("{points}", String(loyaltyBalance))} · {t.loyalty.value}
+              </span>
+            </span>
+          </label>
+        ) : null}
+
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-text-dim">{t.subtotal}</span>
@@ -339,6 +468,24 @@ export function CheckoutForm({
               <span className="text-text-dim">{t.gift.shippingLine}</span>
               <span className="tabular text-text" dir="ltr" data-testid="shipping-fee">
                 {formatOmr(shippingFee, locale)}
+              </span>
+            </div>
+          ) : null}
+          {couponDiscount > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-dim">
+                {t.discountLabel} (<span dir="ltr">{couponQuote?.code}</span>)
+              </span>
+              <span className="tabular text-accent-light" dir="ltr" data-testid="coupon-discount">
+                −{formatOmr(couponDiscount, locale)}
+              </span>
+            </div>
+          ) : null}
+          {loyaltyDiscount > 0 ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-dim">{t.loyalty.applied}</span>
+              <span className="tabular text-accent-light" dir="ltr" data-testid="loyalty-discount">
+                −{formatOmr(loyaltyDiscount, locale)}
               </span>
             </div>
           ) : null}

@@ -22,6 +22,14 @@ export default defineConfig({
     url: "http://localhost:3000/ar",
     reuseExistingServer: true,
     timeout: 120_000,
-    env: { THAWANI_MOCK: "1" },
+    env: {
+      THAWANI_MOCK: "1",
+      RATE_LIMIT_DISABLED: "1",
+      // Point the dev server at the isolated test branch when configured
+      // (see global-setup.ts). Falls back to the shared DATABASE_URL.
+      ...(process.env.TEST_DATABASE_URL
+        ? { DATABASE_URL: process.env.TEST_DATABASE_URL }
+        : {}),
+    },
   },
 });

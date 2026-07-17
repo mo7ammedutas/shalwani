@@ -1,8 +1,22 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/thawani";
+import { awardPointsForOrder, refundRedeemedPoints } from "@/lib/loyalty";
+import { getSettings } from "@/lib/settings";
+import {
+  orderConfirmationEmail,
+  orderConfirmationSms,
+  sendEmail,
+  sendSms,
+} from "@/lib/notify";
 
-export type OrderStatus = "pending" | "paid" | "failed" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "failed"
+  | "cancelled";
 
 export function newOrderNumber(): string {
   const stamp = Date.now().toString(36).toUpperCase().slice(-4);
@@ -21,10 +35,13 @@ export async function verifyOrderPayment(orderNumber: string): Promise<{
 }> {
   const order = await prisma.order.findUnique({
     where: { orderNumber },
-    include: { items: true },
+    include: { items: true, customer: true },
   });
   if (!order) return { status: "not_found", orderNumber };
-  if (order.status === "paid") return { status: "paid", orderNumber };
+  // Anything at-or-past "paid" is already settled — idempotent early return.
+  if (["paid", "shipped", "delivered"].includes(order.status)) {
+    return { status: order.status as OrderStatus, orderNumber };
+  }
   if (!order.thawaniSessionId) return { status: order.status as OrderStatus, orderNumber };
 
   let paymentStatus: string;
@@ -67,7 +84,36 @@ export async function verifyOrderPayment(orderNumber: string): Promise<{
           rawPayload,
         },
       }),
+      // Consume the coupon exactly once, at the moment payment lands.
+      ...(order.couponCode
+        ? [
+            prisma.coupon.updateMany({
+              where: { code: order.couponCode },
+              data: { usedCount: { increment: 1 } },
+            }),
+          ]
+        : []),
     ]);
+
+    // Post-payment side effects — never allowed to fail the verification.
+    try {
+      const settings = await getSettings();
+      await awardPointsForOrder(order.id, settings.loyaltyPointsPerOmr);
+    } catch (err) {
+      console.error("loyalty award failed:", err);
+    }
+    const info = {
+      orderNumber: order.orderNumber,
+      customerName: order.customer.name,
+      totalBaisa: order.totalBaisa,
+      locale: order.locale,
+    };
+    if (order.customer.email) {
+      const mail = orderConfirmationEmail(info);
+      void sendEmail(order.customer.email, mail.subject, mail.html);
+    }
+    void sendSms(order.customer.phone, orderConfirmationSms(info));
+
     return { status: "paid", orderNumber };
   }
 
@@ -83,6 +129,12 @@ export async function verifyOrderPayment(orderNumber: string): Promise<{
         },
       }),
     ]);
+    // Give back any loyalty points that were held for this order.
+    try {
+      await refundRedeemedPoints(order.id);
+    } catch (err) {
+      console.error("loyalty refund failed:", err);
+    }
     return { status: "cancelled", orderNumber };
   }
 

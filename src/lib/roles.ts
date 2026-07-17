@@ -13,16 +13,18 @@ export type Section =
   | "giftAddons"
   | "orders"
   | "customers"
+  | "coupons"
+  | "reviews"
   | "analytics"
   | "staff"
   | "settings";
 
 /** Pages/nav items a role can see. */
 const SECTION_ACCESS: Record<Role, Section[]> = {
-  admin: ["products", "giftAddons", "orders", "customers", "analytics", "staff", "settings"],
-  manager: ["products", "giftAddons", "orders", "customers", "analytics"],
-  support: ["orders", "customers"],
-  content: ["products", "giftAddons"],
+  admin: ["products", "giftAddons", "orders", "customers", "coupons", "reviews", "analytics", "staff", "settings"],
+  manager: ["products", "giftAddons", "orders", "customers", "coupons", "reviews", "analytics"],
+  support: ["orders", "customers", "reviews"],
+  content: ["products", "giftAddons", "reviews"],
   warehouse: ["products", "orders"],
 };
 
@@ -31,16 +33,18 @@ export type WritePerm =
   | "giftAddons.write"
   | "orders.write"
   | "crm.write"
+  | "coupons.write"
+  | "reviews.write"
   | "staff.write"
   | "settings.write";
 
 /** Server-action write capabilities — checked in addition to, not instead
  * of, the page-level section access above. */
 const WRITE_ACCESS: Record<Role, WritePerm[]> = {
-  admin: ["products.write", "giftAddons.write", "orders.write", "crm.write", "staff.write", "settings.write"],
-  manager: ["products.write", "giftAddons.write", "orders.write", "crm.write"],
-  support: ["crm.write"],
-  content: ["products.write", "giftAddons.write"],
+  admin: ["products.write", "giftAddons.write", "orders.write", "crm.write", "coupons.write", "reviews.write", "staff.write", "settings.write"],
+  manager: ["products.write", "giftAddons.write", "orders.write", "crm.write", "coupons.write", "reviews.write"],
+  support: ["crm.write", "reviews.write"],
+  content: ["products.write", "giftAddons.write", "reviews.write"],
   warehouse: ["products.write"], // stock lives on the product record itself
 };
 
@@ -62,6 +66,8 @@ export const SECTION_PATH: Record<Section, string> = {
   giftAddons: "gift-addons",
   orders: "orders",
   customers: "customers",
+  coupons: "coupons",
+  reviews: "reviews",
   analytics: "analytics",
   staff: "staff",
   settings: "settings",

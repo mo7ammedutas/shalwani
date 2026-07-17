@@ -11,6 +11,7 @@ import { ProductGallery } from "@/components/shop/ProductGallery";
 import { AddToCart } from "@/components/shop/AddToCart";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { WishlistButton } from "@/components/shop/WishlistButton";
+import { ReviewForm } from "@/components/shop/ReviewForm";
 import { Price } from "@/components/ui/Price";
 import { IconArrow } from "@/components/ui/icons";
 
@@ -44,10 +45,15 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [related, images, customer] = await Promise.all([
+  const [related, images, customer, reviews] = await Promise.all([
     getRelated(product),
     productImages(product),
     getCurrentCustomer(),
+    prisma.review.findMany({
+      where: { productId: product.id, approved: true },
+      orderBy: { createdAt: "desc" },
+      include: { customer: { select: { name: true } } },
+    }),
   ]);
   const isWishlisted = customer
     ? Boolean(
@@ -56,6 +62,27 @@ export default async function ProductPage({
         }),
       )
     : false;
+
+  // Review eligibility: signed in + verified purchase + not yet reviewed.
+  let reviewState: "form" | "login" | "purchase" | "already" = "login";
+  if (customer) {
+    const [purchased, own] = await Promise.all([
+      prisma.orderItem.findFirst({
+        where: {
+          productId: product.id,
+          order: { customerId: customer.id, status: { in: ["paid", "shipped", "delivered"] } },
+        },
+        select: { id: true },
+      }),
+      prisma.review.findUnique({
+        where: { productId_customerId: { productId: product.id, customerId: customer.id } },
+        select: { id: true },
+      }),
+    ]);
+    reviewState = own ? "already" : purchased ? "form" : "purchase";
+  }
+  const avgRating =
+    reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
   const name = locale === "ar" ? product.nameAr : product.nameEn;
   const description = locale === "ar" ? product.descriptionAr : product.descriptionEn;
   const inStock = product.stock > 0;
@@ -175,6 +202,54 @@ export default async function ProductPage({
           </dl>
         </div>
       </div>
+
+      <section className="hairline-t pt-16 flex flex-col gap-8" data-testid="reviews-section">
+        <div className="flex flex-wrap items-baseline gap-4">
+          <h2 className="font-heading text-2xl text-text">{dict.product.reviews.title}</h2>
+          {avgRating != null ? (
+            <span className="text-accent-light tabular" dir="ltr" data-testid="avg-rating">
+              ★ {avgRating.toFixed(1)} · {reviews.length}
+            </span>
+          ) : null}
+        </div>
+
+        {reviews.length === 0 ? (
+          <p className="text-text-dim">{dict.product.reviews.empty}</p>
+        ) : (
+          <ul className="flex flex-col gap-6">
+            {reviews.map((r) => (
+              <li key={r.id} className="flex flex-col gap-2 hairline-b pb-6" data-testid="review-item">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-text">{r.customer.name}</span>
+                  <span className="type-label bg-surface-muted px-2 py-0.5 text-accent-light">
+                    {dict.product.reviews.verifiedBadge}
+                  </span>
+                  <span className="text-accent-light tabular" dir="ltr" aria-label={`${r.rating}/5`}>
+                    {"★".repeat(r.rating)}
+                    <span className="text-surface-muted">{"★".repeat(5 - r.rating)}</span>
+                  </span>
+                  <span className="text-xs text-text-dim tabular" dir="ltr">
+                    {r.createdAt.toISOString().slice(0, 10)}
+                  </span>
+                </div>
+                <p className="text-text-dim leading-loose">{r.text}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {reviewState === "form" ? (
+          <ReviewForm productId={product.id} dict={dict} />
+        ) : (
+          <p className="text-sm text-text-dim" data-testid="review-gate">
+            {reviewState === "login"
+              ? dict.product.reviews.loginToReview
+              : reviewState === "purchase"
+                ? dict.product.reviews.purchaseToReview
+                : dict.product.reviews.alreadyReviewed}
+          </p>
+        )}
+      </section>
 
       {related.length > 0 ? (
         <section className="hairline-t pt-16 flex flex-col gap-10">

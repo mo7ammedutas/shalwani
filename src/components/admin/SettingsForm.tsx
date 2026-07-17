@@ -174,6 +174,24 @@ export function SettingsForm({
         </div>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-5 hairline-t pt-8">
+        <legend className="font-heading text-lg text-text mb-2">{t.loyaltyTitle}</legend>
+        <div className="max-w-56">
+          <Label htmlFor="loyaltyPointsPerOmr">{t.loyaltyRate}</Label>
+          <TextInput
+            id="loyaltyPointsPerOmr"
+            name="loyaltyPointsPerOmr"
+            type="number"
+            min={0}
+            step={1}
+            dir="ltr"
+            defaultValue={settings.loyaltyPointsPerOmr}
+            data-testid="settings-loyalty-rate"
+          />
+          <p className="mt-1.5 text-xs text-text-dim">{t.loyaltyRateHint}</p>
+        </div>
+      </fieldset>
+
       <fieldset className="flex flex-col gap-3 hairline-t pt-8">
         <legend className="font-heading text-lg text-text mb-2">{t.paymentTitle}</legend>
         <p className="text-sm text-text-dim">{t.paymentNote}</p>

@@ -302,6 +302,8 @@ export async function deleteCustomer(locale: string, id: string) {
     prisma.paymentTransaction.deleteMany({ where: { orderId: { in: orderIds } } }),
     prisma.order.deleteMany({ where: { id: { in: orderIds } } }),
     prisma.wishlistItem.deleteMany({ where: { customerId: id } }),
+    prisma.review.deleteMany({ where: { customerId: id } }),
+    prisma.loyaltyTransaction.deleteMany({ where: { customerId: id } }),
     prisma.customer.delete({ where: { id } }),
   ]);
   refresh();
@@ -409,6 +411,7 @@ export async function updateSettings(locale: string, formData: FormData) {
   const whatsappUrl = String(formData.get("whatsappUrl") ?? "").trim();
   const vatRatePercent = String(formData.get("vatRatePercent") ?? "0").trim();
   const gulfShippingFeeOmr = String(formData.get("gulfShippingFeeOmr") ?? "").trim();
+  const loyaltyPointsPerOmr = String(formData.get("loyaltyPointsPerOmr") ?? "1").trim();
 
   const entries: [string, string][] = [
     ["logoUrl", logoUrl],
@@ -417,6 +420,7 @@ export async function updateSettings(locale: string, formData: FormData) {
     ["whatsappUrl", whatsappUrl],
     ["vatRatePercent", vatRatePercent],
     ["gulfShippingFeeOmr", gulfShippingFeeOmr],
+    ["loyaltyPointsPerOmr", loyaltyPointsPerOmr],
   ];
 
   await prisma.$transaction(
@@ -426,4 +430,205 @@ export async function updateSettings(locale: string, formData: FormData) {
   );
   refresh();
   redirect(`/${locale}/admin/settings?saved=1`);
+}
+
+// ── Coupons ───────────────────────────────────────────────────
+
+const couponSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(3)
+    .max(40)
+    .transform((s) => s.toUpperCase().replace(/\s+/g, "")),
+  kind: z.enum(["percent", "fixed", "freeShipping"]),
+  value: z.coerce.number().int().min(0).max(1_000_000),
+  minOrderOmr: z
+    .string()
+    .trim()
+    .regex(/^\d*(\.\d{1,3})?$/)
+    .optional(),
+  maxUses: z.coerce.number().int().min(1).optional(),
+  expiresAt: z.string().optional(), // yyyy-mm-dd from <input type="date">
+  active: z.boolean(),
+});
+
+function parseCouponForm(formData: FormData) {
+  return couponSchema.safeParse({
+    code: formData.get("code"),
+    kind: formData.get("kind"),
+    value: formData.get("value") || "0",
+    minOrderOmr: String(formData.get("minOrderOmr") ?? ""),
+    maxUses: formData.get("maxUses") || undefined,
+    expiresAt: String(formData.get("expiresAt") ?? ""),
+    active: formData.get("active") === "on",
+  });
+}
+
+function couponData(data: z.infer<typeof couponSchema>) {
+  // Percent coupons cap at 100; fixed coupons store OMR-entered value as baisa.
+  const value =
+    data.kind === "percent"
+      ? Math.min(data.value, 100)
+      : data.kind === "fixed"
+        ? omrToBaisa(data.value)
+        : 0;
+  return {
+    code: data.code,
+    kind: data.kind,
+    value,
+    minOrderBaisa: data.minOrderOmr ? omrToBaisa(parseFloat(data.minOrderOmr) || 0) : 0,
+    maxUses: data.maxUses ?? null,
+    expiresAt: data.expiresAt ? new Date(`${data.expiresAt}T23:59:59Z`) : null,
+    active: data.active,
+  };
+}
+
+export async function createCoupon(locale: string, formData: FormData) {
+  await requirePerm(locale, "coupons.write");
+  const parsed = parseCouponForm(formData);
+  if (!parsed.success) redirect(`/${locale}/admin/coupons/new?error=1`);
+  try {
+    await prisma.coupon.create({ data: couponData(parsed.data) });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      redirect(`/${locale}/admin/coupons/new?error=duplicate`);
+    }
+    throw err;
+  }
+  refresh();
+  redirect(`/${locale}/admin/coupons?saved=1`);
+}
+
+export async function updateCoupon(locale: string, id: string, formData: FormData) {
+  await requirePerm(locale, "coupons.write");
+  const parsed = parseCouponForm(formData);
+  if (!parsed.success) redirect(`/${locale}/admin/coupons/${id}?error=1`);
+  await prisma.coupon.update({ where: { id }, data: couponData(parsed.data) });
+  refresh();
+  redirect(`/${locale}/admin/coupons?saved=1`);
+}
+
+export async function setCouponActive(locale: string, id: string, active: boolean) {
+  await requirePerm(locale, "coupons.write");
+  await prisma.coupon.update({ where: { id }, data: { active } });
+  refresh();
+  redirect(`/${locale}/admin/coupons?saved=1`);
+}
+
+export async function deleteCoupon(locale: string, id: string) {
+  await requirePerm(locale, "coupons.write");
+  await prisma.coupon.delete({ where: { id } });
+  refresh();
+  redirect(`/${locale}/admin/coupons?deleted=1`);
+}
+
+// ── Order fulfilment (status + tracking) ──────────────────────
+
+/** Legal transitions only — an order can't skip payment or resurrect. */
+const STATUS_FLOW: Record<string, string[]> = {
+  paid: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+};
+
+export async function updateOrderFulfilment(locale: string, id: string, formData: FormData) {
+  await requirePerm(locale, "orders.write");
+  const nextStatus = String(formData.get("status") ?? "");
+  const trackingNumber = String(formData.get("trackingNumber") ?? "").trim() || null;
+
+  const order = await prisma.order.findUnique({ where: { id }, include: { customer: true } });
+  if (!order) redirect(`/${locale}/admin/orders`);
+
+  const allowed = STATUS_FLOW[order.status] ?? [];
+  const statusChanging = nextStatus && nextStatus !== order.status;
+  if (statusChanging && !allowed.includes(nextStatus)) {
+    redirect(`/${locale}/admin/orders?error=bad_transition`);
+  }
+
+  await prisma.order.update({
+    where: { id },
+    data: {
+      trackingNumber,
+      ...(statusChanging
+        ? {
+            status: nextStatus,
+            ...(nextStatus === "shipped" ? { shippedAt: new Date() } : {}),
+            ...(nextStatus === "delivered" ? { deliveredAt: new Date() } : {}),
+          }
+        : {}),
+    },
+  });
+
+  // Notify the customer on shipped/delivered — fire-and-forget.
+  if (statusChanging && (nextStatus === "shipped" || nextStatus === "delivered")) {
+    const { orderShippedEmail, orderDeliveredEmail, orderShippedSms, sendEmail, sendSms } =
+      await import("@/lib/notify");
+    const info = {
+      orderNumber: order.orderNumber,
+      customerName: order.customer.name,
+      totalBaisa: order.totalBaisa,
+      locale: order.locale,
+      trackingNumber,
+    };
+    const mail = nextStatus === "shipped" ? orderShippedEmail(info) : orderDeliveredEmail(info);
+    if (order.customer.email) void sendEmail(order.customer.email, mail.subject, mail.html);
+    if (nextStatus === "shipped") void sendSms(order.customer.phone, orderShippedSms(info));
+  }
+
+  refresh();
+  redirect(`/${locale}/admin/orders?saved=1`);
+}
+
+// ── Reviews moderation ────────────────────────────────────────
+
+export async function setReviewApproved(locale: string, id: string, approved: boolean) {
+  await requirePerm(locale, "reviews.write");
+  await prisma.review.update({ where: { id }, data: { approved } });
+  refresh();
+  redirect(`/${locale}/admin/reviews?saved=1`);
+}
+
+export async function deleteReview(locale: string, id: string) {
+  await requirePerm(locale, "reviews.write");
+  await prisma.review.delete({ where: { id } });
+  refresh();
+  redirect(`/${locale}/admin/reviews?deleted=1`);
+}
+
+// ── Two-factor authentication (per staff account, self-service) ──
+
+/** Step 1: mint a fresh secret for the signed-in staff member. Stored only
+ * after a correct code confirms the authenticator actually has it. */
+export async function beginTotpEnrollment(locale: string): Promise<never> {
+  const { getCurrentAdmin } = await import("@/lib/admin-auth");
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect(`/${locale}/admin/login`);
+  const { generateTotpSecret } = await import("@/lib/totp");
+  const secret = generateTotpSecret();
+  redirect(`/${locale}/admin/security?secret=${secret}`);
+}
+
+/** Step 2: verify the first code and persist the secret. */
+export async function confirmTotpEnrollment(locale: string, formData: FormData) {
+  const { getCurrentAdmin } = await import("@/lib/admin-auth");
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect(`/${locale}/admin/login`);
+  const secret = String(formData.get("secret") ?? "");
+  const code = String(formData.get("code") ?? "");
+  const { verifyTotp } = await import("@/lib/totp");
+  if (!secret || !verifyTotp(secret, code)) {
+    redirect(`/${locale}/admin/security?secret=${secret}&error=1`);
+  }
+  await prisma.adminUser.update({ where: { id: admin!.id }, data: { totpSecret: secret } });
+  refresh();
+  redirect(`/${locale}/admin/security?enabled=1`);
+}
+
+export async function disableTotp(locale: string) {
+  const { getCurrentAdmin } = await import("@/lib/admin-auth");
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect(`/${locale}/admin/login`);
+  await prisma.adminUser.update({ where: { id: admin!.id }, data: { totpSecret: null } });
+  refresh();
+  redirect(`/${locale}/admin/security?disabled=1`);
 }

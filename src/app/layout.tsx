@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { Cairo, Poppins } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { defaultLocale, dirFor, isLocale, type Locale } from "@/lib/i18n/config";
 import { getSettings } from "@/lib/settings";
@@ -44,7 +46,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           --color-accent-dark: ${preset.accentDark} !important;
         }`}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

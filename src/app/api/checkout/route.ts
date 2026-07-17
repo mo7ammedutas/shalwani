@@ -8,6 +8,9 @@ import { isLocale } from "@/lib/i18n/config";
 import { SHIPPING_FEE_BAISA } from "@/lib/shipping";
 import { getCurrentCustomer } from "@/lib/customer-auth";
 import { getSettings, vatRateFraction } from "@/lib/settings";
+import { quoteCoupon } from "@/lib/coupons";
+import { maxRedeemablePoints, pointsToBaisa, redeemOps } from "@/lib/loyalty";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const checkoutSchema = z.object({
   locale: z.string().refine(isLocale),
@@ -33,9 +36,15 @@ const checkoutSchema = z.object({
   giftMessage: z.string().trim().max(500).optional(),
   recipientName: z.string().trim().max(120).optional(),
   giftAddonIds: z.array(z.string().min(1)).max(10).default([]),
+  couponCode: z.string().trim().max(40).optional(),
+  redeemPoints: z.boolean().default(false),
 });
 
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("checkout", clientIp(request)))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   let input: z.infer<typeof checkoutSchema>;
   try {
     input = checkoutSchema.parse(await request.json());
@@ -79,16 +88,49 @@ export async function POST(request: Request) {
   const addonsTotal = addons.reduce((sum, a) => sum + a.priceBaisa, 0);
 
   const settings = await getSettings();
-  const shippingFee =
-    input.shippingZone === "gulf" ? settings.gulfShippingFeeBaisa : SHIPPING_FEE_BAISA.oman;
-  // VAT applies to goods + gift add-ons, not to shipping — standard practice.
-  const vatBaisa = Math.round((productsTotal + addonsTotal) * vatRateFraction(settings));
-  const totalBaisa = productsTotal + addonsTotal + shippingFee + vatBaisa;
+  const goodsSubtotal = productsTotal + addonsTotal;
 
   // Identity comes from the session when signed in — never from the form —
   // so an order always attaches to the real account and its contact fields
-  // can't be hijacked by someone typing a stranger's phone number.
+  // can't be hijacked by someone typing a stranger's phone number. Loaded
+  // before pricing because loyalty redemption depends on the real balance.
   const loggedInCustomer = await getCurrentCustomer();
+
+  // ── Coupon (validated against the DB, never client math) ──
+  let couponCode: string | null = null;
+  let couponDiscount = 0;
+  let freeShipping = false;
+  if (input.couponCode) {
+    const result = await quoteCoupon(input.couponCode, goodsSubtotal);
+    if (!result.ok) {
+      return NextResponse.json({ error: "invalid_coupon", reason: result.reason }, { status: 400 });
+    }
+    couponCode = result.quote.coupon.code;
+    couponDiscount = result.quote.goodsDiscountBaisa;
+    freeShipping = result.quote.freeShipping;
+  }
+
+  const shippingFee = freeShipping
+    ? 0
+    : input.shippingZone === "gulf"
+      ? settings.gulfShippingFeeBaisa
+      : SHIPPING_FEE_BAISA.oman;
+
+  // ── Loyalty redemption (signed-in customers only, server-side balance) ──
+  let redeemedPoints = 0;
+  if (input.redeemPoints && loggedInCustomer) {
+    redeemedPoints = maxRedeemablePoints(
+      loggedInCustomer.loyaltyPoints,
+      goodsSubtotal - couponDiscount,
+    );
+  }
+  const loyaltyDiscount = pointsToBaisa(redeemedPoints);
+  const discountBaisa = couponDiscount + loyaltyDiscount;
+  const discountedGoods = goodsSubtotal - discountBaisa;
+
+  // VAT applies to the discounted goods value, not to shipping.
+  const vatBaisa = Math.round(discountedGoods * vatRateFraction(settings));
+  const totalBaisa = discountedGoods + shippingFee + vatBaisa;
   let customer;
   if (loggedInCustomer) {
     customer = await prisma.customer.update({
@@ -133,6 +175,9 @@ export async function POST(request: Request) {
       shippingFeeBaisa: shippingFee,
       giftAddonsTotalBaisa: addonsTotal,
       vatBaisa,
+      couponCode,
+      discountBaisa,
+      redeemedPoints,
       items: {
         create: lines.map((l) => ({
           productId: l.product.id,
@@ -189,10 +234,26 @@ export async function POST(request: Request) {
         ]
       : [];
 
+  // With a discount applied, itemized lines no longer sum to the charged
+  // total (Thawani has no negative line items) — collapse to a single line.
+  const sessionLines =
+    discountBaisa > 0
+      ? [
+          {
+            name: (input.locale === "ar"
+              ? `طلب شالواني ${orderNumber} (بعد الخصم)`
+              : `Shalwani order ${orderNumber} (discounted)`
+            ).slice(0, 40),
+            quantity: 1,
+            unit_amount: totalBaisa,
+          },
+        ]
+      : [...productLines, ...addonLines, ...shippingLine, ...vatLine];
+
   try {
     const session = await createCheckoutSession({
       clientReferenceId: orderNumber,
-      products: [...productLines, ...addonLines, ...shippingLine, ...vatLine],
+      products: sessionLines,
       successUrl,
       cancelUrl,
       metadata: { orderNumber, phone: input.customer.phone },
@@ -211,6 +272,11 @@ export async function POST(request: Request) {
           rawPayload: JSON.stringify(session),
         },
       }),
+      // Hold redeemed points now that the payment session exists; refunded
+      // automatically if the order later fails or is cancelled.
+      ...(redeemedPoints > 0 && loggedInCustomer
+        ? redeemOps(loggedInCustomer.id, order.id, redeemedPoints)
+        : []),
     ]);
 
     const redirectUrl = isMockMode() ? successUrl : payRedirectUrl(session.session_id);

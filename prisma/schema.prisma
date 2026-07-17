@@ -12,8 +12,8 @@ datasource db {
 }
 
 model Product {
-  id            String      @id @default(cuid())
-  slug          String      @unique
+  id            String         @id @default(cuid())
+  slug          String         @unique
   nameAr        String
   nameEn        String
   descriptionAr String
@@ -22,24 +22,43 @@ model Product {
   embroidery    String // slug into the embroidery taxonomy (kashmiri, geometric, ...)
   priceBaisa    Int // integer baisa; 1 OMR = 1000 baisa
   images        String // JSON array of image paths, primary first
-  stock         Int         @default(0)
-  featured      Boolean     @default(false)
-  archived      Boolean     @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
-  createdAt     DateTime    @default(now())
+  stock         Int            @default(0)
+  featured      Boolean        @default(false)
+  archived      Boolean        @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
+  createdAt     DateTime       @default(now())
   orderItems    OrderItem[]
   wishlistedBy  WishlistItem[]
+  reviews       Review[]
 }
 
 model Customer {
-  id           String         @id @default(cuid())
-  name         String
-  phone        String         @unique
-  email        String?
-  passwordHash String? // set once the customer registers; null = guest-only record
-  notes        String? // admin-only CRM note, never shown to the customer
-  createdAt    DateTime       @default(now())
-  orders       Order[]
-  wishlist     WishlistItem[]
+  id            String               @id @default(cuid())
+  name          String
+  phone         String               @unique
+  email         String?
+  passwordHash  String? // set once the customer registers; null = guest-only record
+  notes         String? // admin-only CRM note, never shown to the customer
+  loyaltyPoints Int                  @default(0) // current redeemable balance
+  createdAt     DateTime             @default(now())
+  orders        Order[]
+  wishlist      WishlistItem[]
+  loyaltyLog    LoyaltyTransaction[]
+  reviews       Review[]
+}
+
+/**
+ * Audit trail for every points movement — the balance on Customer is the
+ * cached sum, this table is the source of truth for "where did they come
+ * from". kind: earn | redeem | adjust.
+ */
+model LoyaltyTransaction {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  orderId    String?
+  kind       String // "earn" | "redeem" | "adjust"
+  points     Int // positive for earn, negative for redeem
+  createdAt  DateTime @default(now())
 }
 
 model WishlistItem {
@@ -58,7 +77,7 @@ model Order {
   orderNumber          String               @unique // SHW-XXXXXX
   customerId           String
   customer             Customer             @relation(fields: [customerId], references: [id])
-  status               String               @default("pending") // pending | paid | failed | cancelled
+  status               String               @default("pending") // pending | paid | shipped | delivered | failed | cancelled
   totalBaisa           Int // grand total: products + gift add-ons + shipping fee
   shippingAddress      String
   notes                String?
@@ -71,6 +90,13 @@ model Order {
   shippingFeeBaisa     Int                  @default(0)
   giftAddonsTotalBaisa Int                  @default(0)
   vatBaisa             Int                  @default(0)
+  couponCode           String? // snapshot of the applied coupon's code
+  discountBaisa        Int                  @default(0) // coupon + redeemed loyalty points combined
+  redeemedPoints       Int                  @default(0) // loyalty points spent on this order
+  trackingNumber       String? // carrier reference, free text
+  shippedAt            DateTime?
+  deliveredAt          DateTime?
+  reminderSentAt       DateTime? // abandoned-checkout reminder timestamp (sent at most once)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
   items                OrderItem[]
@@ -139,7 +165,9 @@ model ContactMessage {
   createdAt DateTime @default(now())
 }
 
-/** Staff account — replaces the single shared ADMIN_PASSWORD. */
+/**
+ * Staff account — replaces the single shared ADMIN_PASSWORD.
+ */
 model AdminUser {
   id           String   @id @default(cuid())
   name         String
@@ -147,19 +175,69 @@ model AdminUser {
   passwordHash String
   role         String // "admin" | "manager" | "support" | "content" | "warehouse"
   active       Boolean  @default(true)
+  totpSecret   String? // base32 TOTP secret; null = 2FA not enrolled
   createdAt    DateTime @default(now())
 }
 
-/** Simple key/value store editable from /admin/settings — string or
+/**
+ * Discount codes. kind: "percent" (value = 1–100), "fixed" (value = baisa
+ * off the goods subtotal), "freeShipping" (value ignored).
+ */
+model Coupon {
+  id            String    @id @default(cuid())
+  code          String    @unique // stored uppercase
+  kind          String // "percent" | "fixed" | "freeShipping"
+  value         Int       @default(0)
+  minOrderBaisa Int       @default(0) // goods subtotal threshold to qualify
+  maxUses       Int? // null = unlimited
+  usedCount     Int       @default(0)
+  active        Boolean   @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+/**
+ * Product review — only customers with a paid order containing the product
+ * may submit; only approved reviews render on the storefront.
+ */
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  rating     Int // 1–5
+  text       String
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([productId, customerId]) // one review per customer per product
+}
+
+/**
+ * Fixed-window rate limiting backed by Postgres — no Redis needed, and it
+ * works across serverless instances. key = "<scope>:<identifier>".
+ */
+model RateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int      @default(0)
+}
+
+/**
+ * Simple key/value store editable from /admin/settings — string or
  * JSON.stringify'd structured values, read at runtime instead of hardcoded
- * constants for logo, contact channels, tax and shipping. */
+ * constants for logo, contact channels, tax and shipping.
+ */
 model Setting {
   key   String @id
   value String
 }
 
-/** One row per calendar day, incremented by a storefront beacon.
- * Powers an approximate conversion-rate metric in analytics. */
+/**
+ * One row per calendar day, incremented by a storefront beacon.
+ * Powers an approximate conversion-rate metric in analytics.
+ */
 model PageView {
   day   String @id // "YYYY-MM-DD"
   count Int    @default(0)

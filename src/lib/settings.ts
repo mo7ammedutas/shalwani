@@ -12,6 +12,7 @@ export interface SiteSettings {
   whatsappUrl: string;
   vatRatePercent: number; // 0–100, e.g. 5 for 5%
   gulfShippingFeeBaisa: number;
+  loyaltyPointsPerOmr: number; // earn rate; 0 disables the loyalty program
 }
 
 const DEFAULTS: SiteSettings = {
@@ -21,6 +22,7 @@ const DEFAULTS: SiteSettings = {
   whatsappUrl: SOCIAL.whatsapp,
   vatRatePercent: 0,
   gulfShippingFeeBaisa: SHIPPING_FEE_BAISA.gulf,
+  loyaltyPointsPerOmr: 1,
 };
 
 /** Reads the Setting key/value rows into a typed, defaulted object. Missing
@@ -33,6 +35,7 @@ export async function getSettings(): Promise<SiteSettings> {
   const accentRaw = map.get("accentPreset");
   const vatRaw = map.get("vatRatePercent");
   const gulfRaw = map.get("gulfShippingFeeOmr");
+  const loyaltyRaw = map.get("loyaltyPointsPerOmr");
 
   return {
     logoUrl: map.get("logoUrl") || DEFAULTS.logoUrl,
@@ -44,6 +47,10 @@ export async function getSettings(): Promise<SiteSettings> {
       gulfRaw && !Number.isNaN(Number(gulfRaw))
         ? omrToBaisa(Number(gulfRaw))
         : DEFAULTS.gulfShippingFeeBaisa,
+    loyaltyPointsPerOmr:
+      loyaltyRaw && !Number.isNaN(Number(loyaltyRaw))
+        ? Math.max(0, Math.floor(Number(loyaltyRaw)))
+        : DEFAULTS.loyaltyPointsPerOmr,
   };
 }
 

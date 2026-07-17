@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { Price } from "@/components/ui/Price";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
-import { deleteOrder } from "@/app/[locale]/admin/actions";
+import { deleteOrder, updateOrderFulfilment } from "@/app/[locale]/admin/actions";
 import { requireSection } from "@/lib/admin-guard";
 
 export default async function AdminOrdersPage({
@@ -13,13 +13,14 @@ export default async function AdminOrdersPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ deleted?: string }>;
+  searchParams: Promise<{ deleted?: string; saved?: string; error?: string }>;
 }) {
   const [{ locale: raw }, notice] = await Promise.all([params, searchParams]);
   const locale: Locale = isLocale(raw) ? raw : "ar";
   await requireSection(locale, "orders");
   const dict = getDictionary(locale);
   const t = dict.admin.orders;
+  const tf = t.fulfilment;
 
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
@@ -33,13 +34,17 @@ export default async function AdminOrdersPage({
         <h2 className="font-heading text-xl text-text">{t.title}</h2>
         {orders.length > 0 ? <PrintButton label={t.printAll} /> : null}
       </div>
-      {notice.deleted ? (
+      {notice.deleted || notice.saved || notice.error ? (
         <p
-          role="status"
+          role={notice.error ? "alert" : "status"}
           data-testid="admin-notice"
-          className="print:hidden border border-accent-light bg-surface px-4 py-3 text-sm text-accent-light"
+          className={`print:hidden border px-4 py-3 text-sm ${
+            notice.error
+              ? "border-accent-secondary text-accent-secondary"
+              : "border-accent-light bg-surface text-accent-light"
+          }`}
         >
-          {t.deleted}
+          {notice.error ? tf.badTransition : notice.deleted ? t.deleted : tf.saved}
         </p>
       ) : null}
       {orders.length === 0 ? (
@@ -112,7 +117,7 @@ export default async function AdminOrdersPage({
                   <td className="py-3 pe-4">
                     <span
                       className={`type-label ${
-                        o.status === "paid"
+                        o.status === "paid" || o.status === "shipped" || o.status === "delivered"
                           ? "text-accent-light"
                           : o.status === "pending"
                             ? "text-surface-cream"
@@ -121,6 +126,49 @@ export default async function AdminOrdersPage({
                     >
                       {t.statuses[o.status] ?? o.status}
                     </span>
+                    {o.trackingNumber ? (
+                      <span className="mt-1 block text-xs text-text-dim tabular" dir="ltr">
+                        {o.trackingNumber}
+                      </span>
+                    ) : null}
+                    {o.status === "paid" ? (
+                      <form
+                        action={updateOrderFulfilment.bind(null, locale, o.id)}
+                        className="print:hidden mt-2 flex flex-col gap-1.5"
+                      >
+                        <input type="hidden" name="status" value="shipped" />
+                        <input
+                          name="trackingNumber"
+                          dir="ltr"
+                          placeholder={tf.trackingPlaceholder}
+                          defaultValue={o.trackingNumber ?? ""}
+                          className="w-36 border border-surface-muted bg-surface px-2 py-1 text-xs text-text"
+                          data-testid={`tracking-${o.orderNumber}`}
+                        />
+                        <button
+                          type="submit"
+                          className="w-fit text-xs text-accent-light underline underline-offset-4 cursor-pointer"
+                          data-testid={`ship-${o.orderNumber}`}
+                        >
+                          {tf.markShipped}
+                        </button>
+                      </form>
+                    ) : o.status === "shipped" ? (
+                      <form
+                        action={updateOrderFulfilment.bind(null, locale, o.id)}
+                        className="print:hidden mt-2"
+                      >
+                        <input type="hidden" name="status" value="delivered" />
+                        <input type="hidden" name="trackingNumber" value={o.trackingNumber ?? ""} />
+                        <button
+                          type="submit"
+                          className="w-fit text-xs text-accent-light underline underline-offset-4 cursor-pointer"
+                          data-testid={`deliver-${o.orderNumber}`}
+                        >
+                          {tf.markDelivered}
+                        </button>
+                      </form>
+                    ) : null}
                   </td>
                   <td className="py-3 text-text-dim tabular" dir="ltr">
                     {o.createdAt.toISOString().slice(0, 16).replace("T", " ")}

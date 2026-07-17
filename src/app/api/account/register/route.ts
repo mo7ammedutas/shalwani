@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { createCustomerSessionToken, CUSTOMER_COOKIE } from "@/lib/customer-auth";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -12,6 +13,10 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (!(await checkRateLimit("register", clientIp(request)))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   let input: z.infer<typeof schema>;
   try {
     input = schema.parse(await request.json());

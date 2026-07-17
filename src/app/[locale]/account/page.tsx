@@ -33,7 +33,7 @@ export default async function AccountPage({
   const dict = getDictionary(locale);
   const t = dict.account;
 
-  const [orders, wishlist] = await Promise.all([
+  const [orders, wishlist, loyaltyLog] = await Promise.all([
     prisma.order.findMany({
       where: { customerId: customer.id },
       orderBy: { createdAt: "desc" },
@@ -43,6 +43,11 @@ export default async function AccountPage({
       where: { customerId: customer.id },
       orderBy: { createdAt: "desc" },
       include: { product: true },
+    }),
+    prisma.loyaltyTransaction.findMany({
+      where: { customerId: customer.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
     }),
   ]);
 
@@ -80,15 +85,28 @@ export default async function AccountPage({
                       {order.orderNumber}
                     </span>
                     <span
-                      className={`type-label ${order.status === "paid" ? "text-accent-light" : "text-text-dim"}`}
+                      className={`type-label ${
+                        ["paid", "shipped", "delivered"].includes(order.status)
+                          ? "text-accent-light"
+                          : "text-text-dim"
+                      }`}
+                      data-testid={`order-status-${order.orderNumber}`}
                     >
-                      {dict.admin.orders.statuses[order.status] ?? order.status}
+                      {t.orderStatuses[order.status] ?? order.status}
                     </span>
                     <span className="tabular text-text-dim" dir="ltr">
                       {order.createdAt.toISOString().slice(0, 10)}
                     </span>
                     <Price baisa={order.totalBaisa} locale={locale} className="text-text" />
                   </div>
+                  {order.trackingNumber ? (
+                    <p className="text-sm text-text-dim">
+                      {t.trackingLabel}:{" "}
+                      <span className="tabular text-accent-light" dir="ltr">
+                        {order.trackingNumber}
+                      </span>
+                    </p>
+                  ) : null}
                   <p className="text-sm text-text-dim">
                     {order.items
                       .map((i) => `${locale === "ar" ? i.product.nameAr : i.product.nameEn} × ${i.quantity}`)
@@ -99,6 +117,41 @@ export default async function AccountPage({
               );
             })}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-6" data-testid="loyalty-section">
+        <h2 className="font-heading text-xl text-text">{t.loyaltyTitle}</h2>
+        <div className="flex flex-wrap items-baseline gap-3">
+          <span className="type-label text-text-dim">{t.loyaltyBalance}</span>
+          <span className="font-heading text-3xl text-accent-light tabular" dir="ltr" data-testid="loyalty-balance">
+            {customer.loyaltyPoints}
+          </span>
+          <span className="text-sm text-text-dim">{t.loyaltyPointsUnit}</span>
+        </div>
+        <p className="max-w-prose text-sm text-text-dim leading-relaxed">{t.loyaltyHint}</p>
+        {loyaltyLog.length === 0 ? (
+          <p className="text-sm text-text-dim">{t.loyaltyEmpty}</p>
+        ) : (
+          <div>
+            <h3 className="type-label text-text-dim mb-3">{t.loyaltyHistoryTitle}</h3>
+            <ul className="flex flex-col hairline-t max-w-md">
+              {loyaltyLog.map((tx) => (
+                <li key={tx.id} className="flex items-center justify-between gap-3 py-2.5 hairline-b text-sm">
+                  <span className="text-text-dim">{t.loyaltyKinds[tx.kind] ?? tx.kind}</span>
+                  <span
+                    className={`tabular ${tx.points >= 0 ? "text-accent-light" : "text-accent-secondary"}`}
+                    dir="ltr"
+                  >
+                    {tx.points >= 0 ? `+${tx.points}` : tx.points}
+                  </span>
+                  <span className="tabular text-text-dim" dir="ltr">
+                    {tx.createdAt.toISOString().slice(0, 10)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
 
