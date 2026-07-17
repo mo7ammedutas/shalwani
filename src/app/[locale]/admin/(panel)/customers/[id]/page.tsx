@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { getCustomerDetail } from "@/lib/crm";
-import { updateCustomerNotes } from "@/app/[locale]/admin/actions";
+import { deleteCustomer, updateCustomerNotes } from "@/app/[locale]/admin/actions";
 import { Price } from "@/components/ui/Price";
 import { Button } from "@/components/ui/Button";
 import { TextArea } from "@/components/ui/Field";
 import { requireSection } from "@/lib/admin-guard";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 
 export default async function AdminCustomerDetailPage({
   params,
@@ -28,12 +29,20 @@ export default async function AdminCustomerDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <Link
-        href={`/${locale}/admin/customers`}
-        className="text-sm text-text-dim underline underline-offset-4 hover:text-accent-light w-fit"
-      >
-        {t.back}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link
+          href={`/${locale}/admin/customers`}
+          className="text-sm text-text-dim underline underline-offset-4 hover:text-accent-light w-fit"
+        >
+          {t.back}
+        </Link>
+        <DeleteProductButton
+          action={deleteCustomer.bind(null, locale, customer.id)}
+          label={t.delete}
+          confirmText={t.confirmDelete}
+          testId="delete-customer"
+        />
+      </div>
 
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>

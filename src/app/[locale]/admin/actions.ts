@@ -286,6 +286,28 @@ export async function updateCustomerNotes(locale: string, id: string, formData: 
   redirect(`/${locale}/admin/customers/${id}?saved=1`);
 }
 
+/** Permanently removes a customer with every dependent record — orders
+ * (items, gift add-ons, payment log), wishlist, account credentials.
+ * Built for clearing test/junk profiles; the confirm dialog in the UI
+ * spells out that order history goes with them. Stock is not restored. */
+export async function deleteCustomer(locale: string, id: string) {
+  await requirePerm(locale, "crm.write");
+
+  const orders = await prisma.order.findMany({ where: { customerId: id }, select: { id: true } });
+  const orderIds = orders.map((o) => o.id);
+
+  await prisma.$transaction([
+    prisma.orderGiftAddon.deleteMany({ where: { orderId: { in: orderIds } } }),
+    prisma.orderItem.deleteMany({ where: { orderId: { in: orderIds } } }),
+    prisma.paymentTransaction.deleteMany({ where: { orderId: { in: orderIds } } }),
+    prisma.order.deleteMany({ where: { id: { in: orderIds } } }),
+    prisma.wishlistItem.deleteMany({ where: { customerId: id } }),
+    prisma.customer.delete({ where: { id } }),
+  ]);
+  refresh();
+  redirect(`/${locale}/admin/customers?deleted=1`);
+}
+
 // ── Staff ─────────────────────────────────────────────────────
 
 const staffSchema = z.object({

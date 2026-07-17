@@ -35,6 +35,32 @@ test.describe("CRM", () => {
     await page.getByTestId("save-notes").click();
     await expect(page).toHaveURL(/saved=1/);
     await expect(page.getByTestId("customer-notes")).toHaveValue("عميل مهتم بالتطريز الكشميري");
+
+    // deleting from the detail page removes the customer and their order
+    page.on("dialog", (d) => d.accept());
+    await page.getByTestId("delete-customer").click();
+    await expect(page).toHaveURL(/\/ar\/admin\/customers\?deleted=1/);
+    await expect(page.getByTestId(`customer-row-${phone}`)).toHaveCount(0);
+  });
+
+  test("deletes a customer directly from the list", async ({ page, request }) => {
+    const phone = "9" + Math.floor(1000000 + Math.random() * 8999999);
+    const res = await request.post("/api/checkout", {
+      data: {
+        locale: "ar",
+        customer: { name: "عميل للحذف", phone, email: "" },
+        address: "مسقط",
+        items: [{ slug: "massar-al-fajr", quantity: 1 }],
+      },
+    });
+    expect(res.ok()).toBeTruthy();
+
+    await loginAsOwner(page);
+    await page.goto("/ar/admin/customers");
+    page.on("dialog", (d) => d.accept());
+    await page.getByTestId(`delete-customer-${phone}`).click();
+    await expect(page.getByTestId("admin-notice")).toBeVisible();
+    await expect(page.getByTestId(`customer-row-${phone}`)).toHaveCount(0);
   });
 });
 

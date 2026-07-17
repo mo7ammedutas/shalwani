@@ -476,6 +476,10 @@ const en: typeof ar = {
       notesPlaceholder: "e.g. prefers evening contact, asked for special gift wrap before…",
       saveNotes: "Save note",
       notesSaved: "Note saved.",
+      delete: "Delete",
+      confirmDelete:
+        "Permanently delete this customer? All their orders, payment history and wishlist go with them — there is no undo.",
+      deleted: "Customer deleted with all their records.",
     },
     staff: {
       title: "Staff",
