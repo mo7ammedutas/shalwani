@@ -16,7 +16,7 @@ export function Footer({
   const nav = [
     { href: `/${locale}/shop`, label: dict.nav.shop },
     { href: `/${locale}/story`, label: dict.nav.story },
-    { href: `/${locale}/bespoke`, label: dict.nav.bespoke },
+    { href: `/${locale}/gallery`, label: dict.nav.bespoke },
     { href: `/${locale}/contact`, label: dict.nav.contact },
   ];
 

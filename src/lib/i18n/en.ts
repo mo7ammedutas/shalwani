@@ -15,8 +15,17 @@ const en: typeof ar = {
     home: "Home",
     shop: "Collection",
     story: "Our Story",
-    bespoke: "Bespoke",
+    bespoke: "Lookbook",
     contact: "Contact",
+  },
+  gallery: {
+    title: "From Our Hands",
+    intro:
+      "Pieces that left our Sohar workshop: hand-embroidered massars and cloth tailored to its owner's measure. Every image leads to its piece in the collection.",
+    empty: "The lookbook is being prepared — follow us on Instagram for the latest work.",
+    ctaNote: "Our newest work and workshop scenes are posted first on Instagram; to book a tailoring appointment or ask about a piece, message us on WhatsApp.",
+    instagramCta: "Follow on Instagram",
+    whatsappCta: "Chat on WhatsApp",
   },
   header: {
     announcement: "Delivery across all of Oman and the Gulf 🚚",

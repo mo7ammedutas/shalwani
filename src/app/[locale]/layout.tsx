@@ -72,7 +72,7 @@ export default async function LocaleLayout({
       { href: `/${locale}`, label: dict.nav.home },
       { href: `/${locale}/shop`, label: dict.nav.shop },
       { href: `/${locale}/story`, label: dict.nav.story },
-      { href: `/${locale}/bespoke`, label: dict.nav.bespoke },
+      { href: `/${locale}/gallery`, label: dict.nav.bespoke },
       { href: `/${locale}/contact`, label: dict.nav.contact },
     ],
     cart: dict.header.cart,
