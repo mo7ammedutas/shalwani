@@ -19,7 +19,7 @@ const en: typeof ar = {
     contact: "Contact",
   },
   header: {
-    announcement: "Delivery included on all orders 🚚",
+    announcement: "Delivery across all of Oman and the Gulf 🚚",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     cart: "Shopping cart",
@@ -28,10 +28,10 @@ const en: typeof ar = {
     switchLocaleLabel: "Switch to Arabic",
   },
   hero: {
-    eyebrow: "An Omani boutique for men's heritage dress",
-    title: "Pashmina massars, embroidered by hands that know their worth",
+    eyebrow: "Shalwani — an Omani tailoring house",
+    title: "Your elegance starts here",
     subtitle:
-      "Men's heritage shawls woven from pure pashmina and embroidered stitch by stitch — worn at Eid, at weddings, and in the majlis, as his father and grandfather wore them before him.",
+      "Elegance, tailored for you: dishdashas cut to your measure and hand-embroidered pashmina massars — from Sohar to every majlis.",
     ctaShop: "Explore the collection",
     ctaWhatsApp: "Chat on WhatsApp",
   },
@@ -304,7 +304,7 @@ const en: typeof ar = {
     cta: "Explore the collection",
   },
   bespoke: {
-    title: "Commission a Bespoke Massar",
+    title: "A Bespoke Piece",
     intro: "For your wedding, a gift to your father, or a standing that deserves what is sold to no one else — we design your massar from the cloth to the final stitch.",
     steps: [
       { title: "Tell us the occasion", body: "A wedding, an Eid, a promotion, or a gift to a man you hold in high regard. The occasion sets the spirit of the design." },
