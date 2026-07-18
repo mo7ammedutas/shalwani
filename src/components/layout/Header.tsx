@@ -60,7 +60,7 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
 
       {/* Main row: utilities — centred logo — cart */}
       <div className="hairline-b">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-5 py-4 md:px-8 md:py-5">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-5 py-2 md:px-8 md:py-3">
           <div className="flex items-center gap-1 justify-self-start">
             {/* Mobile menu toggle */}
             <button
