@@ -96,19 +96,19 @@ export function Header({ locale, labels }: { locale: Locale; labels: HeaderLabel
               <Image
                 src={labels.logoUrl}
                 alt={labels.brandName}
-                width={56}
-                height={56}
-                className="h-14 w-auto object-contain"
+                width={112}
+                height={112}
+                className="h-28 w-auto object-contain"
                 priority
               />
             ) : (
               <>
-                <span lang="ar" className="font-display text-4xl font-bold leading-none">
+                <span lang="ar" className="font-display text-[3.5rem] font-bold leading-none">
                   شالواني
                 </span>
                 <span
                   lang="en"
-                  className="font-display text-[0.7rem] font-light tracking-[0.5em] uppercase text-text-dim ps-[0.5em]"
+                  className="font-display text-[1.4rem] font-light tracking-[0.5em] uppercase text-text-dim ps-[0.5em]"
                 >
                   Shalwani
                 </span>
