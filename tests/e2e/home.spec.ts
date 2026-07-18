@@ -47,9 +47,9 @@ test.describe("language switcher", () => {
   });
 
   test("keeps the current page when switching language", async ({ page }) => {
-    await page.goto("/ar/shop/massar-al-layl");
+    await page.goto("/ar/shop/bashmina-classic-1");
     await page.getByRole("banner").getByRole("link", { name: toEnglish }).click();
-    await expect(page).toHaveURL(/\/en\/shop\/massar-al-layl$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Midnight");
+    await expect(page).toHaveURL(/\/en\/shop\/bashmina-classic-1$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Pashmina Massar");
   });
 });

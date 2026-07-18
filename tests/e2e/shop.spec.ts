@@ -8,7 +8,7 @@ test.describe("shop filtering and sorting", () => {
   test("filters by color", async ({ page }) => {
     await page.goto("/ar/shop");
     const initial = await page.getByTestId("product-card").count();
-    expect(initial).toBeGreaterThanOrEqual(10);
+    expect(initial).toBeGreaterThanOrEqual(8);
 
     await page.getByTestId("filter-color").selectOption("ivory");
     await expect(page).toHaveURL(/color=ivory/);
@@ -18,7 +18,7 @@ test.describe("shop filtering and sorting", () => {
     await expect
       .poll(async () => {
         const texts = await cards.allTextContents();
-        return texts.length >= 2 && texts.every((t) => t.includes("عاجي"));
+        return texts.length >= 1 && texts.every((t) => t.includes("عاجي"));
       })
       .toBe(true);
     expect(await cards.count()).toBeLessThan(initial);
@@ -31,7 +31,7 @@ test.describe("shop filtering and sorting", () => {
     await expect
       .poll(async () => {
         const texts = await cards.allTextContents();
-        // seeded kashmiri pieces = 3, all cards must match the filter
+        // seeded kashmiri pieces = 5, all cards must match the filter
         return texts.length >= 3 && texts.every((t) => t.includes("تطريز كشميري"));
       })
       .toBe(true);
@@ -39,19 +39,19 @@ test.describe("shop filtering and sorting", () => {
     // Each selection triggers a soft navigation that rebuilds the URL from
     // useSearchParams — wait for it to land before stacking the next filter,
     // or the later one reads stale params and drops the earlier one.
-    await page.getByTestId("filter-price").selectOption("over40");
-    await expect(page).toHaveURL(/price=over40/);
+    await page.getByTestId("filter-price").selectOption("25to40");
+    await expect(page).toHaveURL(/price=25to40/);
     await page.getByTestId("filter-color").selectOption("lazuli");
     await expect(page).toHaveURL(/color=lazuli/);
 
-    // The seeded lazuli kashmiri piece over 40 OMR must survive the stack
+    // The seeded lazuli kashmiri piece in the 25-40 bucket must survive the stack
     await expect
       .poll(
         async () => {
           const texts = await cards.allTextContents();
           return (
             texts.length >= 1 &&
-            texts.some((t) => t.includes("مَصَر اللازورد")) &&
+            texts.some((t) => t.includes("مصار الباشمينا — الفئة الثانية")) &&
             texts.every((t) => t.includes("أزرق لازوردي") && t.includes("تطريز كشميري"))
           );
         },
@@ -66,7 +66,7 @@ test.describe("shop filtering and sorting", () => {
     await expect(page).toHaveURL(/sort=price-asc/);
     const prices = await page
       .getByTestId("product-card")
-      .locator(".tabular")
+      .locator('[data-testid="card-price"]')
       .allTextContents();
     const numbers = prices.map((p) => parseFloat(p.replace(/[^\d.]/g, "")));
     expect(numbers).toEqual([...numbers].sort((a, b) => a - b));

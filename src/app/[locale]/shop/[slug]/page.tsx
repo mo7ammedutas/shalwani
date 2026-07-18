@@ -134,11 +134,21 @@ export default async function ProductPage({
             <h1 className="font-heading text-3xl md:text-4xl text-text leading-tight">{name}</h1>
           </div>
 
-          <Price
-            baisa={product.priceBaisa}
-            locale={locale}
-            className="font-display text-2xl text-surface-cream"
-          />
+          <span className="flex items-baseline gap-3">
+            {product.originalPriceBaisa != null &&
+            product.originalPriceBaisa > product.priceBaisa ? (
+              <Price
+                baisa={product.originalPriceBaisa}
+                locale={locale}
+                className="text-lg text-text-dim line-through"
+              />
+            ) : null}
+            <Price
+              baisa={product.priceBaisa}
+              locale={locale}
+              className="font-display text-2xl text-surface-cream"
+            />
+          </span>
 
           <p className="text-text-dim leading-loose">{description}</p>
 

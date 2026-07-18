@@ -32,7 +32,7 @@ test.describe("settings", () => {
       );
       expect(accent.toLowerCase()).toBe("#1f4a38"); // ACCENT_PRESETS.emerald.accent
 
-      await page.goto("/ar/shop/massar-al-fajr");
+      await page.goto("/ar/shop/super-turma");
       await page.getByTestId("add-to-cart").click();
       await page.goto("/ar/checkout");
       await page.getByTestId("shipping-gulf").check({ force: true });

@@ -19,7 +19,7 @@ test.describe("CRM", () => {
         locale: "ar",
         customer: { name: "عميل CRM", phone, email: "" },
         address: "مسقط",
-        items: [{ slug: "massar-al-hisn", quantity: 1 }],
+        items: [{ slug: "bashmina-classic-2", quantity: 1 }],
       },
     });
     expect(res.ok()).toBeTruthy();
@@ -50,7 +50,7 @@ test.describe("CRM", () => {
         locale: "ar",
         customer: { name: "عميل للحذف", phone, email: "" },
         address: "مسقط",
-        items: [{ slug: "massar-al-fajr", quantity: 1 }],
+        items: [{ slug: "super-turma", quantity: 1 }],
       },
     });
     expect(res.ok()).toBeTruthy();

@@ -21,6 +21,11 @@ const productSchema = z.object({
     .string()
     .trim()
     .regex(/^\d+(\.\d{1,3})?$/),
+  originalPriceOmr: z
+    .string()
+    .trim()
+    .regex(/^\d*(\.\d{1,3})?$/)
+    .optional(),
   stock: z.coerce.number().int().min(0).max(9999),
   featured: z.boolean(),
   archived: z.boolean(),
@@ -42,6 +47,7 @@ function parseForm(formData: FormData) {
     color: formData.get("color"),
     embroidery: formData.get("embroidery"),
     priceOmr: formData.get("priceOmr"),
+    originalPriceOmr: String(formData.get("originalPriceOmr") ?? ""),
     stock: formData.get("stock"),
     featured: formData.get("featured") === "on",
     archived: formData.get("archived") === "on",
@@ -90,6 +96,9 @@ export async function createProduct(locale: string, formData: FormData) {
       color: data.color,
       embroidery: data.embroidery,
       priceBaisa: omrToBaisa(parseFloat(data.priceOmr)),
+      originalPriceBaisa: data.originalPriceOmr
+        ? omrToBaisa(parseFloat(data.originalPriceOmr))
+        : null,
       stock: data.stock,
       featured: data.featured,
       archived: data.archived,
@@ -116,6 +125,9 @@ export async function updateProduct(locale: string, id: string, formData: FormDa
       color: data.color,
       embroidery: data.embroidery,
       priceBaisa: omrToBaisa(parseFloat(data.priceOmr)),
+      originalPriceBaisa: data.originalPriceOmr
+        ? omrToBaisa(parseFloat(data.originalPriceOmr))
+        : null,
       stock: data.stock,
       featured: data.featured,
       archived: data.archived,

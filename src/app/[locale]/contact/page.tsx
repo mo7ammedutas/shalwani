@@ -49,6 +49,47 @@ export default async function ContactPage({
         <p className="text-text-dim leading-loose">{t.intro}</p>
       </header>
 
+      {/* Shop info — phone, address, hours (matches the real @shalwani.om bio) */}
+      <section
+        data-testid="shop-info"
+        className="border border-surface-muted bg-surface/40 px-6 py-8 md:px-8 flex flex-col gap-6"
+      >
+        <h2 className="font-heading text-xl text-text">{t.infoTitle}</h2>
+        <dl className="grid gap-8 md:grid-cols-3">
+          <div className="flex flex-col gap-1.5">
+            <dt className="type-label text-text-dim">{t.phoneLabel}</dt>
+            <dd>
+              <a
+                href={`tel:${t.phoneValue.replace(/\s+/g, "")}`}
+                dir="ltr"
+                className="tabular text-lg text-accent-light hover:underline underline-offset-4"
+                data-testid="shop-phone"
+              >
+                {t.phoneValue}
+              </a>
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <dt className="type-label text-text-dim">{t.addressLabel}</dt>
+            <dd className="flex flex-col gap-1">
+              <span className="text-text leading-relaxed">{t.addressValue}</span>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=AALIA+Hotel+Suites+Sohar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-accent-light underline underline-offset-4 self-start"
+              >
+                {t.addressMapCta}
+              </a>
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <dt className="type-label text-text-dim">{t.hoursLabel}</dt>
+            <dd className="text-text leading-relaxed">{t.hoursValue}</dd>
+          </div>
+        </dl>
+      </section>
+
       <div className="grid gap-12 lg:grid-cols-2 items-start">
         <div className="flex flex-col hairline-t">
           {channels.map((c) => (

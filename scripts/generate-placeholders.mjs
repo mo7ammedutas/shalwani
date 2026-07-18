@@ -182,16 +182,15 @@ function heroView() {
 }
 
 const PRODUCTS = [
-  ["massar-al-layl", "geometric", "midnight"],
-  ["massar-al-lazward", "kashmiri", "lazuli"],
-  ["massar-al-annabi", "floral", "burgundy"],
-  ["massar-al-aaji", "border", "ivory"],
-  ["massar-al-hisn", "geometric", "slate"],
-  ["massar-al-midad", "kashmiri", "ink"],
-  ["massar-al-saafa", "floral", "ivory"],
-  ["massar-al-khanjar", "kashmiri", "midnight"],
-  ["massar-al-fajr", "border", "slate"],
-  ["massar-al-imara", "geometric", "burgundy"],
+  // Real catalogue lines (keep in sync with prisma/seed.ts)
+  ["super-turma", "border", "slate"],
+  ["bashmina-classic-1", "geometric", "midnight"],
+  ["bashmina-classic-2", "kashmiri", "lazuli"],
+  ["bashmina-vip-1", "floral", "burgundy"],
+  ["bashmina-vip-2", "kashmiri", "ink"],
+  ["sanjin-i", "kashmiri", "ivory"],
+  ["sanjin-ii", "kashmiri", "midnight"],
+  ["sanjin-vvip", "kashmiri", "ink"],
 ];
 
 for (const [slug, kind, color] of PRODUCTS) {

@@ -63,13 +63,13 @@ test.describe("coupons", () => {
     await expect(page.getByTestId(`coupon-row-${code}`)).toBeVisible();
 
     // ── apply at checkout ──
-    await page.goto("/ar/shop/massar-al-layl");
+    await page.goto("/ar/shop/bashmina-classic-1");
     await page.getByTestId("add-to-cart").click();
     await page.goto("/ar/checkout");
     await page.getByTestId("coupon-input").fill(code);
     await page.getByTestId("coupon-apply").click();
-    // 10% of 32.500 = 3.250 discount, shown as its own line
-    await expect(page.getByTestId("coupon-discount")).toContainText("3.250");
+    // 10% of 30.000 = 3.000 discount, shown as its own line
+    await expect(page.getByTestId("coupon-discount")).toContainText("3.000");
 
     // ── pay (mock) and confirm the discount survived server recompute ──
     const phone = uniquePhone();
@@ -117,7 +117,7 @@ test.describe("fulfilment", () => {
     await page.getByTestId("register-submit").click();
     await expect(page).toHaveURL(/\/ar\/account$/);
 
-    await page.goto("/ar/shop/massar-al-fajr");
+    await page.goto("/ar/shop/super-turma");
     await page.getByTestId("add-to-cart").click();
     await page.goto("/ar/checkout");
     await page.getByTestId("checkout-address").fill("مسقط، الخوير");
@@ -171,7 +171,7 @@ test.describe("reviews", () => {
     await expect(page).toHaveURL(/\/ar\/account$/);
 
     // Before purchase: gated.
-    await page.goto("/ar/shop/massar-al-hisn");
+    await page.goto("/ar/shop/bashmina-classic-2");
     await expect(page.getByTestId("review-gate")).toContainText("لمن اشترى");
 
     // Buy it (mock pay).
@@ -182,14 +182,14 @@ test.describe("reviews", () => {
     await expect(page).toHaveURL(/checkout\/success/, { timeout: 30_000 });
 
     // Submit a review.
-    await page.goto("/ar/shop/massar-al-hisn");
+    await page.goto("/ar/shop/bashmina-classic-2");
     await page.getByTestId("rating-4").click();
     await page.getByTestId("review-text").fill("خامة ممتازة وتطريز يستحق السعر.");
     await page.getByTestId("review-submit").click();
     await expect(page.getByText("سيظهر تقييمك بعد مراجعته")).toBeVisible();
 
     // Not public until approved.
-    await page.goto("/ar/shop/massar-al-hisn");
+    await page.goto("/ar/shop/bashmina-classic-2");
     await expect(page.getByText("خامة ممتازة وتطريز يستحق السعر.")).toHaveCount(0);
 
     // Approve in admin.
@@ -201,7 +201,7 @@ test.describe("reviews", () => {
     await expect(page).toHaveURL(/saved=1/, { timeout: 30_000 });
 
     // Now public with the verified badge.
-    await page.goto("/ar/shop/massar-al-hisn");
+    await page.goto("/ar/shop/bashmina-classic-2");
     await expect(page.getByText("خامة ممتازة وتطريز يستحق السعر.")).toBeVisible();
     await expect(page.getByTestId("avg-rating")).toContainText("4.0");
 
@@ -211,7 +211,7 @@ test.describe("reviews", () => {
     await page.getByTestId(`delete-customer-${phone}`).click();
     await expect(page).toHaveURL(/deleted=1/, { timeout: 30_000 });
     await expect(page.getByTestId(`customer-row-${phone}`)).toHaveCount(0);
-    await page.goto("/ar/shop/massar-al-hisn");
+    await page.goto("/ar/shop/bashmina-classic-2");
     await expect(page.getByText("خامة ممتازة وتطريز يستحق السعر.")).toHaveCount(0);
   });
 });

@@ -56,7 +56,20 @@ export function ProductCard({
           {dict.colors[product.color] ?? product.color} ·{" "}
           {dict.embroidery[product.embroidery] ?? product.embroidery}
         </p>
-        <Price baisa={product.priceBaisa} locale={locale} className="text-sm text-surface-cream" />
+        <span className="flex items-baseline gap-2">
+          {product.originalPriceBaisa != null && product.originalPriceBaisa > product.priceBaisa ? (
+            <s className="no-underline">
+              <Price
+                baisa={product.originalPriceBaisa}
+                locale={locale}
+                className="text-xs text-text-dim line-through"
+              />
+            </s>
+          ) : null}
+          <span data-testid="card-price">
+            <Price baisa={product.priceBaisa} locale={locale} className="text-sm text-surface-cream" />
+          </span>
+        </span>
       </div>
     </Link>
   );

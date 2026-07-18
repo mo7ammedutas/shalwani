@@ -5,7 +5,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "shalwani-2026";
 
 test.describe("gift checkout", () => {
   test("gift toggle reveals add-ons and message, total updates live", async ({ page }) => {
-    await page.goto("/ar/shop/massar-al-layl"); // 32.500 OMR
+    await page.goto("/ar/shop/bashmina-classic-1"); // 30.000 OMR (offer price)
     await page.getByTestId("add-to-cart").click();
     await page.getByTestId("drawer-checkout").click();
     await expect(page).toHaveURL(/\/ar\/checkout$/);
@@ -17,27 +17,27 @@ test.describe("gift checkout", () => {
     await expect(page.getByTestId("gift-message")).toBeVisible();
 
     // Baseline total is just the product
-    await expect(page.getByTestId("checkout-total")).toContainText("32.500");
+    await expect(page.getByTestId("checkout-total")).toContainText("30.000");
 
     // Selecting an add-on updates the total
     await page.getByTestId("addon-roses").check(); // 3.000 OMR
     await expect(page.getByTestId("addons-total")).toContainText("3.000");
-    await expect(page.getByTestId("checkout-total")).toContainText("35.500");
+    await expect(page.getByTestId("checkout-total")).toContainText("33.000");
 
     // Selecting Gulf shipping adds its fee on top
     await page.getByTestId("shipping-gulf").check();
     await expect(page.getByTestId("shipping-fee")).toContainText("5.000");
-    await expect(page.getByTestId("checkout-total")).toContainText("40.500");
+    await expect(page.getByTestId("checkout-total")).toContainText("38.000");
 
     // Deselecting the add-on removes it again
     await page.getByTestId("addon-roses").uncheck();
-    await expect(page.getByTestId("checkout-total")).toContainText("37.500");
+    await expect(page.getByTestId("checkout-total")).toContainText("35.000");
   });
 
   test("submits a gift order with add-ons, message and Gulf shipping — server recomputes the total", async ({
     page,
   }) => {
-    await page.goto("/ar/shop/massar-al-aaji"); // 24.000 OMR
+    await page.goto("/ar/shop/super-turma"); // 25.000 OMR
     await page.getByTestId("add-to-cart").click();
     await page.getByTestId("drawer-checkout").click();
 
@@ -52,8 +52,8 @@ test.describe("gift checkout", () => {
     await page.getByTestId("gift-message").fill("كل عام وأنتم بخير");
     await page.getByTestId("shipping-gulf").check(); // 5.000 OMR
 
-    // 24.000 + 2.500 + 3.000 + 5.000 = 34.500
-    await expect(page.getByTestId("checkout-total")).toContainText("34.500");
+    // 25.000 + 2.500 + 3.000 + 5.000 = 35.500
+    await expect(page.getByTestId("checkout-total")).toContainText("35.500");
 
     await page.getByTestId("pay-now").click();
     await expect(page).toHaveURL(/checkout\/success\?order=SHW-/, { timeout: 30_000 });
@@ -66,7 +66,7 @@ test.describe("gift checkout", () => {
         locale: "ar",
         customer: { name: "سالم الهنائي", phone: "96896666666", email: "" },
         address: "مسقط",
-        items: [{ slug: "massar-al-fajr", quantity: 1 }],
+        items: [{ slug: "super-turma", quantity: 1 }],
         isGift: true,
         giftAddonIds: ["not-a-real-addon-id"],
         shippingZone: "oman",
@@ -81,7 +81,7 @@ test.describe("gift checkout", () => {
         locale: "ar",
         customer: { name: "سالم الهنائي", phone: "96897777777", email: "" },
         address: "مسقط",
-        items: [{ slug: "massar-al-fajr", quantity: 1 }], // 19.500 OMR
+        items: [{ slug: "super-turma", quantity: 1 }], // 25.000 OMR
         isGift: false,
         giftAddonIds: [], // even if a client sent addon ids, isGift:false means no addons
         shippingZone: "oman",
@@ -120,7 +120,7 @@ test.describe("admin gift add-ons", () => {
     await expect(row).toContainText("1.500");
 
     // It now appears as a selectable add-on at checkout
-    await page.goto("/ar/shop/massar-al-fajr");
+    await page.goto("/ar/shop/super-turma");
     await page.getByTestId("add-to-cart").click();
     await page.getByTestId("drawer-checkout").click();
     await page.getByTestId("gift-toggle").check();
@@ -140,7 +140,7 @@ test.describe("admin gift add-ons", () => {
     await expect(page.getByTestId("row-e2e-greeting-card")).toHaveCount(0);
 
     // No longer offered at checkout
-    await page.goto("/ar/shop/massar-al-fajr");
+    await page.goto("/ar/shop/super-turma");
     await page.getByTestId("add-to-cart").click();
     await page.getByTestId("drawer-checkout").click();
     await page.getByTestId("gift-toggle").check();

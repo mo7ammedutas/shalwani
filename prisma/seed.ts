@@ -13,156 +13,152 @@ function hashPassword(password: string): string {
 }
 
 /**
- * Placeholder catalogue — realistic structure and OMR pricing, awaiting the
- * boutique's real photography and price list (README §Content). Prices are
- * integer baisa: 1 OMR = 1000 baisa.
+ * Catalogue aligned with the boutique's real Instagram lines
+ * (@shalwani.om): the offers line (super turma + pashmina classes) and
+ * the one-of-a-kind Sanjin luxury line. Prices are the documented real
+ * prices in integer baisa (1 OMR = 1000 baisa); originalPriceBaisa is the
+ * documented pre-offer price, rendered struck-through on the storefront.
+ * Photography is placeholder art until the shop's real photos land.
  */
 const products = [
+  // ── خط العروض — نقشة صغيرة، خياطة يد ──
   {
-    slug: "massar-al-layl",
-    nameAr: "مَصَر الليل",
-    nameEn: "The Midnight Massar",
+    slug: "super-turma",
+    nameAr: "مصار سوبر تورمة",
+    nameEn: "Super Turma Massar",
     descriptionAr:
-      "كحليّ عميق كسماء الداخلية بعد العشاء، بتطريز هندسي مستوحى من شرفات القلاع. قطعة تُلبس يوم تريد أن تدخل المجلس صامتاً ويتكلم مَصَرك عنك.",
+      "مصار سوبر تورمة بنقشة صغيرة وخياطة يد كاملة، من خط العروض. خيارٌ عمليّ أنيق يليق بالمجلس واليوم الرسمي، والتوصيل يشمل جميع الطلبات.",
     descriptionEn:
-      "Deep midnight like the Dakhiliyah sky after evening prayer, with geometric embroidery drawn from fort parapets. A piece for the day you enter the majlis silent and let your massar speak.",
+      "Super Turma massar with a fine small motif, fully hand-stitched — from our offers line. A sharp everyday choice for the majlis and formal days. Delivery included on all orders.",
+    color: "slate",
+    embroidery: "border",
+    priceBaisa: 25000,
+    stock: 10,
+    featured: true,
+  },
+  {
+    slug: "bashmina-classic-1",
+    nameAr: "مصار الباشمينا — الفئة الأولى",
+    nameEn: "Pashmina Massar — Class I",
+    descriptionAr:
+      "مصار باشمينا بنقشة صغيرة وخياطة يد، من خط العروض. فخامة تُقتنى بسعر عرضٍ صريح: سابقاً بخمسةٍ وثلاثين ريالاً، وبعد العرض بثلاثين فقط.",
+    descriptionEn:
+      "Hand-stitched pashmina massar with a fine small motif, from the offers line. Previously 35 OMR — now 30 during the offer.",
     color: "midnight",
     embroidery: "geometric",
-    priceBaisa: 32500,
+    priceBaisa: 30000,
+    originalPriceBaisa: 35000,
     stock: 8,
     featured: true,
   },
   {
-    slug: "massar-al-lazward",
-    nameAr: "مَصَر اللازورد",
-    nameEn: "The Lazuli Massar",
+    slug: "bashmina-classic-2",
+    nameAr: "مصار الباشمينا — الفئة الثانية",
+    nameEn: "Pashmina Massar — Class II",
     descriptionAr:
-      "أزرق لازوردي مشبع بتطريز كشميري متصل، تُطرَّز حاشيته على مدى ثمانية أيام كاملة. اختيار العرسان ومن يجلس في صدر المجلس.",
+      "مصار باشمينا من الفئة الثانية بخياطة يد ونقشة صغيرة أدق. سابقاً بخمسةٍ وأربعين ريالاً، وبعد العرض بتسعةٍ وثلاثين فقط ✨",
     descriptionEn:
-      "Saturated lazuli blue with continuous Kashmiri needlework — its border alone takes eight full days. The choice of grooms and of the man seated at the head of the majlis.",
+      "Class II hand-stitched pashmina massar with a finer small motif. Previously 45 OMR — now 39 during the offer ✨",
     color: "lazuli",
     embroidery: "kashmiri",
-    priceBaisa: 45000,
-    stock: 5,
-    featured: true,
-  },
-  {
-    slug: "massar-al-annabi",
-    nameAr: "مَصَر العنّابي",
-    nameEn: "The Burgundy Massar",
-    descriptionAr:
-      "عنّابي غامق بزخرفة نباتية دقيقة تلتفّ كسعف النخيل. لونٌ لا يلبسه إلا واثق، ويكمل الدشداشة البيضاء كما يكمل الخنجرُ الحزام.",
-    descriptionEn:
-      "Dark burgundy with fine floral vinework curling like palm fronds. A color worn only by the confident — it completes a white dishdasha the way a khanjar completes its belt.",
-    color: "burgundy",
-    embroidery: "floral",
-    priceBaisa: 38500,
+    priceBaisa: 39000,
+    originalPriceBaisa: 45000,
     stock: 6,
     featured: true,
   },
   {
-    slug: "massar-al-aaji",
-    nameAr: "مَصَر العاجي",
-    nameEn: "The Ivory Massar",
+    slug: "bashmina-vip-1",
+    nameAr: "مصار الباشمينا VIP — الفئة الأولى",
+    nameEn: "Pashmina Massar VIP — Class I",
     descriptionAr:
-      "عاجيّ هادئ بحاشية مطرّزة بخيط أزرق لازوردي. الأخفّ في المجموعة وأكثرها طلباً لصلاة العيد وصباحات المناسبات.",
+      "من فئة VIP: باشمينا أرقى وخياطة يد أدق لمن يريد حضوراً يتقدّم المجلس. سابقاً بخمسةٍ وخمسين ريالاً، وبعد العرض بخمسين.",
     descriptionEn:
-      "Quiet ivory with a lazuli-thread embroidered border. The lightest piece in the collection, and the most asked-for at Eid prayers and morning occasions.",
-    color: "ivory",
-    embroidery: "border",
-    priceBaisa: 24000,
-    stock: 12,
-    featured: true,
+      "VIP class: finer pashmina and closer hand-stitching for a presence that leads the majlis. Previously 55 OMR — now 50.",
+    color: "burgundy",
+    embroidery: "floral",
+    priceBaisa: 50000,
+    originalPriceBaisa: 55000,
+    stock: 5,
+    featured: false,
   },
   {
-    slug: "massar-al-hisn",
-    nameAr: "مَصَر الحِصن",
-    nameEn: "The Fort Massar",
+    slug: "bashmina-vip-2",
+    nameAr: "مصار الباشمينا VIP — الفئة الثانية",
+    nameEn: "Pashmina Massar VIP — Class II",
     descriptionAr:
-      "رمادي أزرق كحجر حصن بهلاء، بتطريز هندسي متوازن يليق بالاستقبالات الرسمية ومجالس العمل.",
+      "أعلى فئات خط العروض: باشمينا VIP بخياطة يد كاملة ونقشة دقيقة. سابقاً بخمسةٍ وستين ريالاً، وبعد العرض بتسعةٍ وخمسين فقط ✨",
     descriptionEn:
-      "Blue slate like the stone of Bahla fort, with balanced geometric embroidery suited to formal receptions and working majlis.",
-    color: "slate",
-    embroidery: "geometric",
-    priceBaisa: 28500,
-    stock: 9,
-    featured: true,
-  },
-  {
-    slug: "massar-al-midad",
-    nameAr: "مَصَر المِداد",
-    nameEn: "The Ink Massar",
-    descriptionAr:
-      "أسود مائل للزرقة كمِداد المخطوطات، بتطريز كشميري كثيف بخيط أزرق مصقول. أفخم قطعة في المجموعة، تُقتنى ولا تُستهلك.",
-    descriptionEn:
-      "Blue-black like manuscript ink, densely embroidered in burnished blue Kashmiri thread. The most opulent piece in the collection — acquired, not consumed.",
+      "The top of the offers line: VIP pashmina, fully hand-stitched with an intricate motif. Previously 65 OMR — now 59 ✨",
     color: "ink",
     embroidery: "kashmiri",
-    priceBaisa: 52000,
-    stock: 3,
-    featured: false,
+    priceBaisa: 59000,
+    originalPriceBaisa: 65000,
+    stock: 4,
+    featured: true,
   },
+  // ── خط السنجين الفاخر — قطع فريدة، سعرها بحسب تعقيد التطريز ──
   {
-    slug: "massar-al-saafa",
-    nameAr: "مَصَر السَّعفة",
-    nameEn: "The Palm Frond Massar",
+    slug: "sanjin-i",
+    nameAr: "مَصَر الباشمينا السنجين",
+    nameEn: "Sanjin Pashmina Massar",
     descriptionAr:
-      "عاجيّ بزخرفة نباتية خفيفة على كامل الحاشية. خيار الرجل الذي يريد حضوراً هادئاً في مجالس النهار.",
+      "فخامة تُهدى… وأناقة تُقتنى ✨ قطعة استثنائية من خط السنجين تجمع بين الرقي والأصالة، بتفاصيل راقية تليق بمن يبحث عن التميز. كما يمكن تقديمها هدية لشخص عزيز، مع لمسة تليق بقيمة المناسبة وجمال الإهداء 🎁",
     descriptionEn:
-      "Ivory with light floral vinework along the full border. For the man who wants a quiet presence in daytime gatherings.",
+      "Elegance to gift, refinement to keep ✨ An exceptional one-of-a-kind piece from the Sanjin line, uniting grace and heritage in details made for those who seek distinction. It also makes a gift worthy of the occasion 🎁",
     color: "ivory",
-    embroidery: "floral",
-    priceBaisa: 26500,
-    stock: 10,
+    embroidery: "kashmiri",
+    priceBaisa: 165000,
+    stock: 1,
     featured: false,
   },
   {
-    slug: "massar-al-khanjar",
-    nameAr: "مَصَر الخنجر",
-    nameEn: "The Khanjar Massar",
+    slug: "sanjin-ii",
+    nameAr: "مَصَر الباشمينا السنجين",
+    nameEn: "Sanjin Pashmina Massar",
     descriptionAr:
-      "كحليّ بزخارف كشميرية تستعير انحناءة نصل الخنجر العُماني. قطعة تُهدى للوالد والعم ومن له مقام.",
+      "قطعة استثنائية فريدة من خط السنجين، تطريزها الأكثف يرفع قيمتها. فخامة تُهدى… وأناقة تُقتنى، بتفاصيل راقية تليق بمن يبحث عن التميز 🇴🇲",
     descriptionEn:
-      "Midnight navy with Kashmiri motifs borrowing the curve of the Omani khanjar blade. The piece men gift to a father, an uncle, a man of standing.",
+      "A unique, exceptional Sanjin piece — its denser embroidery sets its value. Elegance to gift, refinement to keep, in details made for those who seek distinction 🇴🇲",
     color: "midnight",
     embroidery: "kashmiri",
-    priceBaisa: 48000,
-    stock: 4,
+    priceBaisa: 175000,
+    stock: 1,
     featured: false,
   },
   {
-    slug: "massar-al-fajr",
-    nameAr: "مَصَر الفجر",
-    nameEn: "The Daybreak Massar",
+    slug: "sanjin-vvip",
+    nameAr: "مَصَر الباشمينا السنجين VVIP",
+    nameEn: "Sanjin Pashmina Massar VVIP",
     descriptionAr:
-      "رمادي أزرق فاتح بحاشية مطرّزة رصينة. المدخل الأنسب لمن يقتني أول مَصَر باشمينا له.",
+      "أندر قطع شالواني: مَصَر السنجين VVIP، قطعة واحدة لا تتكرر بتطريزٍ هو الأعقد في تاريخ المحل. نفدت — وستبقى في السجل شاهداً على ما تصنعه الأيادي حين لا تستعجل.",
     descriptionEn:
-      "Light blue slate with a composed embroidered border. The right first pashmina massar for a man starting his collection.",
-    color: "slate",
-    embroidery: "border",
-    priceBaisa: 19500,
-    stock: 15,
-    featured: false,
-  },
-  {
-    slug: "massar-al-imara",
-    nameAr: "مَصَر العِمارة",
-    nameEn: "The Architecture Massar",
-    descriptionAr:
-      "عنّابي بتطريز هندسي يحاكي أقواس الأبواب العُمانية القديمة. نفدت الدفعة الأولى بالكامل، والدفعة القادمة قيد التطريز.",
-    descriptionEn:
-      "Burgundy with geometric embroidery echoing the arches of old Omani doorways. The first batch sold out entirely; the next is on the needle now.",
-    color: "burgundy",
-    embroidery: "geometric",
-    priceBaisa: 35000,
+      "The rarest Shalwani piece: the Sanjin VVIP — a single, unrepeatable massar carrying the most intricate embroidery the house has produced. Sold out, and kept on record as proof of what unhurried hands can do.",
+    color: "ink",
+    embroidery: "kashmiri",
+    priceBaisa: 400000,
     stock: 0,
-    featured: false,
+    featured: true,
   },
 ];
 
 const giftAddons = [
   { slug: "roses", nameAr: "باقة ورد", nameEn: "Bouquet of roses", priceBaisa: 3000 },
   { slug: "chocolate", nameAr: "علبة شوكولاتة", nameEn: "Box of chocolates", priceBaisa: 2500 },
+];
+
+/** Pre-alignment poetic-name products (never existed on the real account).
+ * They may carry order history, so they're archived rather than deleted. */
+const retiredSlugs = [
+  "massar-al-layl",
+  "massar-al-lazward",
+  "massar-al-annabi",
+  "massar-al-aaji",
+  "massar-al-hisn",
+  "massar-al-midad",
+  "massar-al-saafa",
+  "massar-al-khanjar",
+  "massar-al-fajr",
+  "massar-al-imara",
 ];
 
 async function main() {
@@ -175,6 +171,12 @@ async function main() {
     });
   }
   console.log(`Seeded ${products.length} products.`);
+
+  const retired = await prisma.product.updateMany({
+    where: { slug: { in: retiredSlugs }, archived: false },
+    data: { archived: true, featured: false },
+  });
+  if (retired.count > 0) console.log(`Archived ${retired.count} retired catalogue products.`);
 
   for (const a of giftAddons) {
     await prisma.giftAddon.upsert({ where: { slug: a.slug }, update: a, create: a });

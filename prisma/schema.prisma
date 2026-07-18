@@ -12,23 +12,24 @@ datasource db {
 }
 
 model Product {
-  id            String         @id @default(cuid())
-  slug          String         @unique
-  nameAr        String
-  nameEn        String
-  descriptionAr String
-  descriptionEn String
-  color         String // slug into the shared color taxonomy (midnight, lazuli, ...)
-  embroidery    String // slug into the embroidery taxonomy (kashmiri, geometric, ...)
-  priceBaisa    Int // integer baisa; 1 OMR = 1000 baisa
-  images        String // JSON array of image paths, primary first
-  stock         Int            @default(0)
-  featured      Boolean        @default(false)
-  archived      Boolean        @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
-  createdAt     DateTime       @default(now())
-  orderItems    OrderItem[]
-  wishlistedBy  WishlistItem[]
-  reviews       Review[]
+  id                 String         @id @default(cuid())
+  slug               String         @unique
+  nameAr             String
+  nameEn             String
+  descriptionAr      String
+  descriptionEn      String
+  color              String // slug into the shared color taxonomy (midnight, lazuli, ...)
+  embroidery         String // slug into the embroidery taxonomy (kashmiri, geometric, ...)
+  priceBaisa         Int // integer baisa; 1 OMR = 1000 baisa
+  originalPriceBaisa Int? // pre-sale price, shown struck through; null = not on offer
+  images             String // JSON array of image paths, primary first
+  stock              Int            @default(0)
+  featured           Boolean        @default(false)
+  archived           Boolean        @default(false) // hidden from the storefront; used when a product with orders can't be hard-deleted
+  createdAt          DateTime       @default(now())
+  orderItems         OrderItem[]
+  wishlistedBy       WishlistItem[]
+  reviews            Review[]
 }
 
 model Customer {

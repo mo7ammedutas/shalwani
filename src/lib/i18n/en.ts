@@ -19,7 +19,7 @@ const en: typeof ar = {
     contact: "Contact",
   },
   header: {
-    announcement: "Delivery across Oman — secure checkout by Thawani",
+    announcement: "Delivery included on all orders 🚚",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     cart: "Shopping cart",
@@ -46,6 +46,26 @@ const en: typeof ar = {
     title: "Pieces chosen with a majlis eye",
     viewAll: "View the full collection",
   },
+  tailoring: {
+    eyebrow: "Tailoring service",
+    title: "A dishdasha cut to your measure",
+    body: "Tailoring dishdashas is the root of our craft: measurements taken in person at our shop in AALIA Hotel Suites, Sohar; cloth you choose with your own hand from our fabric lines; and stitching cut for you alone. Tailoring is not ordered online — it begins with an appointment booked over WhatsApp or a visit to the shop.",
+    fabricsTitle: "Our fabric lines",
+    fabrics: [
+      { name: "High Sufi CLASS A — colored", note: "First grade, in a range of colors" },
+      { name: "Shalwani Formal White", note: "The formal white for every occasion" },
+      { name: "Shalwani LIGHT", note: "Light and comfortable for hot days" },
+      { name: "Shalwani Luxury Blue", note: "A refined blue with a different touch" },
+    ],
+    cta: "Book your appointment on WhatsApp",
+    visitNote: "Or visit us: AALIA Hotel Suites, Sohar",
+  },
+  offer: {
+    eyebrow: "Autumn offer",
+    title: "Buy 4 dishdashas in any available fabric — the 5th is on us",
+    body: "A seasonal offer running now on dishdasha tailoring across all available fabrics. To ask about it or book a measurement appointment, message us on WhatsApp.",
+    cta: "Ask on WhatsApp",
+  },
   why: {
     eyebrow: "Why Shalwani",
     title: "Three things men who wear the real thing already know",
@@ -64,14 +84,16 @@ const en: typeof ar = {
       },
     ],
   },
+  // TODO: the quote below is a real follower comment on an actual post —
+  // published unattributed until its author gives explicit permission to use
+  // their name. Collect permissioned, named testimonials before final launch.
   testimonial: {
-    quote:
-      "I wore it to my brother's wedding, and there wasn't a majlis where someone didn't ask where the massar was from. Clean work — and the fold held from the Eid prayer until the end of the night.",
-    name: "Saeed bin Hamad",
-    role: "Shalwani customer — Muscat",
+    quote: "No argument about the pieces — but the stitching, that's the secret here.",
+    name: "A Shalwani customer",
+    role: "Comment on one of the shop's posts",
   },
   footer: {
-    blurb: "An Omani boutique for men's hand-embroidered pashmina massars. From Muscat to every majlis.",
+    blurb: "An Omani tailoring house for dishdashas and hand-embroidered pashmina massars. From Sohar to every majlis.",
     navTitle: "Site",
     followTitle: "Follow",
     supportTitle: "Support",
@@ -261,6 +283,10 @@ const en: typeof ar = {
         body: "The massar crowns Omani men's dress. Wrapped over the head in a manner every Omani learns young, it completes the dishdasha and khanjar at Eid, at weddings, and in the men's majlis. Its worth, to those who wear it, was never in a label — it is in the cloth, the precision of the work, and a fold that holds.",
       },
       {
+        title: "Loyalty to a name, before any trade",
+        body: "Shalwani began as loyalty to a name before it was ever a business — the continuation of a legacy left by its founders' late father, may he rest in peace. The shop carries his name and his standards in every piece that leaves it, and on opening day people gathered around it the way they gather around a house whose roots they know.",
+      },
+      {
         title: "Why pashmina",
         body: "Because it is the one cloth that gives a man everything he asks of his massar: softness at the brow, warmth without weight, and a suppleness in wrapping that keeps its shape from the first hour of the day to the last. We work with trusted sources of pure pashmina and refuse blends, whatever they do for the price.",
       },
@@ -273,16 +299,23 @@ const en: typeof ar = {
         body: "A massar worthy of your standing: honest cloth, embroidery that speaks for its wearer, and service that completes the craft. And should you want a piece no other man owns, our bespoke door is open.",
       },
     ],
+    location: "Our workshop and shop are at AALIA Hotel Suites, Sohar — the door is open to anyone who wants to see the craft with his own eyes.",
+    locationCta: "Contact us",
     cta: "Explore the collection",
   },
   bespoke: {
-    title: "Commission a Bespoke Piece",
+    title: "Commission a Bespoke Massar",
     intro: "For your wedding, a gift to your father, or a standing that deserves what is sold to no one else — we design your massar from the cloth to the final stitch.",
     steps: [
       { title: "Tell us the occasion", body: "A wedding, an Eid, a promotion, or a gift to a man you hold in high regard. The occasion sets the spirit of the design." },
       { title: "We propose, you decide", body: "We send color and motif directions over WhatsApp or email, refining with you until you are satisfied." },
-      { title: "Quote and payment", body: "Once the design is approved we send your quote and a secure Thawani payment link, and the embroidery begins." },
+      { title: "Quote and agreement", body: "Once the design is approved we send your final price over WhatsApp, agree on the payment method that suits you, and the embroidery begins." },
     ],
+    dishdasha: {
+      title: "For dishdasha tailoring",
+      body: "Tailoring a dishdasha requires taking your measurements in person at our shop (AALIA Hotel Suites, Sohar) — so it can't be requested through this form. Book your appointment on WhatsApp and we'll confirm a time that suits you.",
+      cta: "Book a tailoring appointment on WhatsApp",
+    },
     form: {
       title: "Bespoke request",
       name: "Full name",
@@ -300,6 +333,14 @@ const en: typeof ar = {
   contact: {
     title: "Contact Us",
     intro: "For any question about a piece, your current order, or a bespoke commission — we are close by.",
+    infoTitle: "Visit our shop",
+    phoneLabel: "Phone",
+    phoneValue: "+968 71599923",
+    addressLabel: "Address",
+    addressValue: "AALIA Hotel Suites, Sohar",
+    addressMapCta: "Open in Google Maps",
+    hoursLabel: "Opening hours",
+    hoursValue: "9:00 AM – 12:00 PM | 4:00 PM – 10:00 PM",
     instagramTitle: "Instagram",
     instagramBody: "New arrivals and glimpses from the workshop.",
     whatsappTitle: "WhatsApp",
@@ -438,6 +479,8 @@ const en: typeof ar = {
       embroideryPlaceholder: "e.g. Kashmiri embroidery, Embroidered border…",
       priceOmr: "Price in Omani rials",
       priceHint: "e.g. 32.500 — stored as integer baisa automatically.",
+      originalPriceOmr: "Pre-offer price (optional)",
+      originalPriceHint: "Shown struck through next to the offer price. Leave empty if the piece isn't on offer.",
       stock: "Stock quantity",
       featured: "Featured (shown on the homepage)",
       images: "Images",

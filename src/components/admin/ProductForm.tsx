@@ -151,6 +151,24 @@ export function ProductForm({
           <p className="mt-1.5 text-xs text-text-dim">{t.priceHint}</p>
         </div>
         <div>
+          <Label htmlFor="pf-original-price">{t.originalPriceOmr}</Label>
+          <TextInput
+            id="pf-original-price"
+            name="originalPriceOmr"
+            dir="ltr"
+            inputMode="decimal"
+            pattern="\d*(\.\d{1,3})?"
+            defaultValue={
+              product?.originalPriceBaisa != null
+                ? baisaToOmr(product.originalPriceBaisa).toFixed(3)
+                : ""
+            }
+            placeholder="45.000"
+            data-testid="pf-original-price"
+          />
+          <p className="mt-1.5 text-xs text-text-dim">{t.originalPriceHint}</p>
+        </div>
+        <div>
           <Label htmlFor="pf-stock">{t.stock}</Label>
           <TextInput
             id="pf-stock"

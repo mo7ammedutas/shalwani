@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -16,9 +17,10 @@ export async function generateMetadata({
 }
 
 const SECTION_IMAGES = [
-  "/products/massar-al-layl-2.svg",
-  "/products/massar-al-annabi-2.svg",
-  "/products/massar-al-aaji-2.svg",
+  "/products/bashmina-classic-1-2.svg",
+  "/products/sanjin-i-2.svg",
+  "/products/bashmina-classic-2-2.svg",
+  "/products/bashmina-vip-2-2.svg",
   null, // the promise closes on text alone
 ];
 
@@ -69,7 +71,16 @@ export default async function StoryPage({
         })}
       </div>
 
-      <div className="flex justify-center hairline-t pt-16">
+      <div className="flex flex-col items-center gap-8 hairline-t pt-16 text-center">
+        <p className="max-w-2xl text-text-dim leading-loose">
+          {dict.story.location}{" "}
+          <Link
+            href={`/${locale}/contact`}
+            className="text-accent-light underline underline-offset-4"
+          >
+            {dict.story.locationCta}
+          </Link>
+        </p>
         <ButtonLink href={`/${locale}/shop`} variant="primary">
           {dict.story.cta}
         </ButtonLink>

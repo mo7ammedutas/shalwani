@@ -19,7 +19,7 @@ test.describe("customer accounts", () => {
     // wishlist a product from its detail page — wait for the toggle's
     // fetch to actually persist before navigating away, since the UI
     // updates optimistically ahead of the network round-trip.
-    await page.goto("/ar/shop/massar-al-layl");
+    await page.goto("/ar/shop/bashmina-classic-1");
     await Promise.all([
       page.waitForResponse((r) => r.url().includes("/api/account/wishlist") && r.ok()),
       page.getByTestId("wishlist-toggle").click(),
@@ -27,7 +27,7 @@ test.describe("customer accounts", () => {
     await expect(page.getByTestId("wishlist-toggle")).toHaveAttribute("aria-pressed", "true");
 
     await page.goto("/ar/account");
-    await expect(page.getByText("مَصَر الليل")).toBeVisible();
+    await expect(page.getByText("مصار الباشمينا — الفئة الأولى")).toBeVisible();
 
     // logout redirects a subsequent /account visit to login
     await page.evaluate(() => fetch("/api/account/logout", { method: "POST" }));
@@ -39,7 +39,7 @@ test.describe("customer accounts", () => {
     await page.getByTestId("login-password").fill("testpass123");
     await page.getByTestId("login-submit").click();
     await expect(page).toHaveURL(/\/ar\/account$/);
-    await expect(page.getByText("مَصَر الليل")).toBeVisible(); // wishlist persisted
+    await expect(page.getByText("مصار الباشمينا — الفئة الأولى")).toBeVisible(); // wishlist persisted
   });
 
   test("checkout links a paid order to the logged-in account", async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("customer accounts", () => {
     await page.getByTestId("register-submit").click();
     await expect(page).toHaveURL(/\/ar\/account$/);
 
-    await page.goto("/ar/shop/massar-al-fajr");
+    await page.goto("/ar/shop/super-turma");
     await page.getByTestId("add-to-cart").click();
     await page.goto("/ar/checkout");
     // contact fields are pre-filled from the account
@@ -61,7 +61,7 @@ test.describe("customer accounts", () => {
     await expect(page).toHaveURL(/checkout\/success/, { timeout: 20_000 });
 
     await page.goto("/ar/account");
-    await expect(page.getByText("مَصَر الفجر")).toBeVisible();
+    await expect(page.getByText("مصار سوبر تورمة")).toBeVisible();
     await expect(page.getByTestId("reorder-button").first()).toBeVisible();
   });
 

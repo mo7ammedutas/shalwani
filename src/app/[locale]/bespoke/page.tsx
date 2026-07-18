@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { isLocale, type Locale } from "@/lib/i18n/config";
+import { isLocale, SOCIAL, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { BespokeForm } from "@/components/sections/BespokeForm";
+import { ButtonLink } from "@/components/ui/Button";
 
 export async function generateMetadata({
   params,
@@ -45,6 +46,24 @@ export default async function BespokePage({
       <div className="max-w-2xl">
         <BespokeForm dict={dict} />
       </div>
+
+      {/* Dishdasha tailoring is measured in person — deliberately outside
+          the online request flow. WhatsApp booking only. */}
+      <aside
+        data-testid="dishdasha-card"
+        className="max-w-2xl border border-surface-muted bg-surface/40 px-6 py-8 flex flex-col gap-4"
+      >
+        <h2 className="font-heading text-xl text-text">{dict.bespoke.dishdasha.title}</h2>
+        <p className="text-text-dim leading-loose text-sm">{dict.bespoke.dishdasha.body}</p>
+        <ButtonLink
+          href={SOCIAL.whatsapp}
+          variant="quiet"
+          className="self-start"
+          data-testid="dishdasha-whatsapp"
+        >
+          {dict.bespoke.dishdasha.cta}
+        </ButtonLink>
+      </aside>
     </div>
   );
 }
