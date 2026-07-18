@@ -414,12 +414,18 @@ export async function setStaffActive(locale: string, id: string, active: boolean
 
 // ── Settings ──────────────────────────────────────────────────
 
+// Keep in sync with dict.story.sections in src/lib/i18n/{ar,en}.ts.
+const STORY_SECTION_COUNT = 5;
+
 export async function updateSettings(locale: string, formData: FormData) {
   await requirePerm(locale, "settings.write");
 
   const logoUrl = String(formData.get("logoUrl") ?? "").trim();
   const heroImageUrl = String(formData.get("heroImageUrl") ?? "").trim();
   const storyTeaserImageUrl = String(formData.get("storyTeaserImageUrl") ?? "").trim();
+  const storyImageUrls = Array.from({ length: STORY_SECTION_COUNT }, (_, i) =>
+    String(formData.get(`storyImageUrl${i}`) ?? "").trim(),
+  );
   const accentPreset = String(formData.get("accentPreset") ?? "midnight");
   const contactEmail = String(formData.get("contactEmail") ?? "").trim();
   const whatsappUrl = String(formData.get("whatsappUrl") ?? "").trim();
@@ -430,6 +436,7 @@ export async function updateSettings(locale: string, formData: FormData) {
   const entries: [string, string][] = [
     ["logoUrl", logoUrl],
     ["heroImageUrl", heroImageUrl],
+    ["storyImageUrls", JSON.stringify(storyImageUrls)],
     ["storyTeaserImageUrl", storyTeaserImageUrl],
     ["accentPreset", accentPreset],
     ["contactEmail", contactEmail],

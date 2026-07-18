@@ -111,6 +111,11 @@ export function SettingsForm({
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
   const [heroImageUrl, setHeroImageUrl] = useState(settings.heroImageUrl);
   const [storyTeaserImageUrl, setStoryTeaserImageUrl] = useState(settings.storyTeaserImageUrl);
+  // Fixed at 5 to match dict.story.sections — pad/truncate whatever was
+  // saved so a mismatched old array never crashes the form.
+  const [storyImageUrls, setStoryImageUrls] = useState(
+    Array.from({ length: 5 }, (_, i) => settings.storyImageUrls[i] ?? ""),
+  );
 
   return (
     <form action={action} className="flex max-w-2xl flex-col gap-12">
@@ -183,6 +188,33 @@ export function SettingsForm({
             ))}
           </div>
         </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-5 hairline-t pt-8">
+        <legend className="font-heading text-lg text-text mb-1">{t.storyPageTitle}</legend>
+        <p className="text-xs text-text-dim -mt-3">{t.storyPageHint}</p>
+
+        {storyImageUrls.map((url, i) => (
+          <ImageSlot
+            key={i}
+            name={`storyImageUrl${i}`}
+            label={t.storyImageLabel.replace("{n}", String(i + 1))}
+            hint={
+              i === storyImageUrls.length - 1
+                ? `${t.storyImageHint} ${t.storyImageLastHint}`
+                : t.storyImageHint
+            }
+            value={url}
+            onChange={(next) =>
+              setStoryImageUrls((prev) => prev.map((v, j) => (j === i ? next : v)))
+            }
+            uploadLabel={t.uploadImage}
+            uploadingLabel={t.uploading}
+            removeLabel={t.removeImage}
+            previewClass="h-16 w-20"
+            testId={`settings-upload-story-${i}`}
+          />
+        ))}
       </fieldset>
 
       <fieldset className="flex flex-col gap-5 hairline-t pt-8">

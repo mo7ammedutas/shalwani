@@ -9,6 +9,11 @@ export interface SiteSettings {
   logoUrl: string; // "" = use the text wordmark
   heroImageUrl: string; // homepage hero backdrop; "" = bundled placeholder art
   storyTeaserImageUrl: string; // homepage story-teaser photo; "" = placeholder
+  /** One image per /story section, in order. "" = no image for that
+   * section (renders as a centered text-only block — the site's original
+   * closing-section treatment, so an empty slot is a valid design choice
+   * and not just "not yet uploaded"). */
+  storyImageUrls: string[];
   accentPreset: AccentPreset;
   contactEmail: string;
   whatsappUrl: string;
@@ -21,6 +26,7 @@ const DEFAULTS: SiteSettings = {
   logoUrl: "",
   heroImageUrl: "",
   storyTeaserImageUrl: "",
+  storyImageUrls: [],
   accentPreset: DEFAULT_ACCENT_PRESET,
   contactEmail: "",
   whatsappUrl: SOCIAL.whatsapp,
@@ -40,11 +46,25 @@ export async function getSettings(): Promise<SiteSettings> {
   const vatRaw = map.get("vatRatePercent");
   const gulfRaw = map.get("gulfShippingFeeOmr");
   const loyaltyRaw = map.get("loyaltyPointsPerOmr");
+  const storyImagesRaw = map.get("storyImageUrls");
+
+  let storyImageUrls = DEFAULTS.storyImageUrls;
+  if (storyImagesRaw) {
+    try {
+      const parsed: unknown = JSON.parse(storyImagesRaw);
+      if (Array.isArray(parsed) && parsed.every((v) => typeof v === "string")) {
+        storyImageUrls = parsed;
+      }
+    } catch {
+      // malformed row — fall back to the default silently
+    }
+  }
 
   return {
     logoUrl: map.get("logoUrl") || DEFAULTS.logoUrl,
     heroImageUrl: map.get("heroImageUrl") || DEFAULTS.heroImageUrl,
     storyTeaserImageUrl: map.get("storyTeaserImageUrl") || DEFAULTS.storyTeaserImageUrl,
+    storyImageUrls,
     accentPreset: accentRaw && isAccentPreset(accentRaw) ? accentRaw : DEFAULTS.accentPreset,
     contactEmail: map.get("contactEmail") || DEFAULTS.contactEmail,
     whatsappUrl: map.get("whatsappUrl") || DEFAULTS.whatsappUrl,

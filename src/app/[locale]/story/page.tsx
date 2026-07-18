@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n";
+import { getSettings } from "@/lib/settings";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ButtonLink } from "@/components/ui/Button";
 
@@ -16,12 +17,16 @@ export async function generateMetadata({
   return { title: dict.story.title, description: dict.story.intro };
 }
 
-const SECTION_IMAGES = [
+/** Bundled placeholder art, used per section index until the admin
+ * uploads a real photo for that slot (Settings → Branding → 'Our Story'
+ * page images). The last section defaults to no image — a text-only
+ * closing block — unless the admin explicitly uploads one. */
+const PLACEHOLDER_IMAGES: (string | null)[] = [
   "/products/bashmina-classic-1-2.svg",
   "/products/sanjin-i-2.svg",
   "/products/bashmina-classic-2-2.svg",
   "/products/bashmina-vip-2-2.svg",
-  null, // the promise closes on text alone
+  null,
 ];
 
 export default async function StoryPage({
@@ -32,6 +37,10 @@ export default async function StoryPage({
   const { locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : "ar";
   const dict = getDictionary(locale);
+  const settings = await getSettings();
+  const sectionImages = dict.story.sections.map(
+    (_, i) => settings.storyImageUrls[i] || PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length],
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-20">
@@ -42,7 +51,7 @@ export default async function StoryPage({
 
       <div className="flex flex-col">
         {dict.story.sections.map((section, i) => {
-          const image = SECTION_IMAGES[i % SECTION_IMAGES.length];
+          const image = sectionImages[i];
           const flip = i % 2 === 1;
           return (
             <section
