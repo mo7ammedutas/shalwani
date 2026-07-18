@@ -74,7 +74,7 @@ export default async function ContactPage({
             <dd className="flex flex-col gap-1">
               <span className="text-text leading-relaxed">{t.addressValue}</span>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=AALIA+Hotel+Suites+Sohar"
+                href="https://maps.app.goo.gl/zVDTGeXW6urfFup89"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-accent-light underline underline-offset-4 self-start"

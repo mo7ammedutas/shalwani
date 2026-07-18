@@ -5,12 +5,22 @@ import type { Dictionary } from "@/lib/i18n";
 import { ButtonLink } from "@/components/ui/Button";
 import { IconWhatsApp } from "@/components/ui/icons";
 
-/** Reference-theme image hero: full-bleed photo, dark wash, centred copy. */
-export function Hero({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+/** Reference-theme image hero: full-bleed photo, dark wash, centred copy.
+ * The backdrop is merchant-managed (Settings → Branding); falls back to
+ * the bundled placeholder art until a real photo is uploaded. */
+export function Hero({
+  locale,
+  dict,
+  imageUrl,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  imageUrl?: string;
+}) {
   return (
     <section className="relative flex min-h-[70svh] items-center justify-center overflow-hidden">
       <Image
-        src="/hero.svg"
+        src={imageUrl || "/hero.svg"}
         alt=""
         fill
         priority

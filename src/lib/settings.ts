@@ -7,6 +7,8 @@ import { DEFAULT_ACCENT_PRESET, isAccentPreset, type AccentPreset } from "@/lib/
 
 export interface SiteSettings {
   logoUrl: string; // "" = use the text wordmark
+  heroImageUrl: string; // homepage hero backdrop; "" = bundled placeholder art
+  storyTeaserImageUrl: string; // homepage story-teaser photo; "" = placeholder
   accentPreset: AccentPreset;
   contactEmail: string;
   whatsappUrl: string;
@@ -17,6 +19,8 @@ export interface SiteSettings {
 
 const DEFAULTS: SiteSettings = {
   logoUrl: "",
+  heroImageUrl: "",
+  storyTeaserImageUrl: "",
   accentPreset: DEFAULT_ACCENT_PRESET,
   contactEmail: "",
   whatsappUrl: SOCIAL.whatsapp,
@@ -39,6 +43,8 @@ export async function getSettings(): Promise<SiteSettings> {
 
   return {
     logoUrl: map.get("logoUrl") || DEFAULTS.logoUrl,
+    heroImageUrl: map.get("heroImageUrl") || DEFAULTS.heroImageUrl,
+    storyTeaserImageUrl: map.get("storyTeaserImageUrl") || DEFAULTS.storyTeaserImageUrl,
     accentPreset: accentRaw && isAccentPreset(accentRaw) ? accentRaw : DEFAULTS.accentPreset,
     contactEmail: map.get("contactEmail") || DEFAULTS.contactEmail,
     whatsappUrl: map.get("whatsappUrl") || DEFAULTS.whatsappUrl,

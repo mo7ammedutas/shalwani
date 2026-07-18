@@ -5,14 +5,23 @@ import type { Dictionary } from "@/lib/i18n";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { IconArrow } from "@/components/ui/icons";
 
-export function StoryTeaser({ locale, dict }: { locale: Locale; dict: Dictionary }) {
+export function StoryTeaser({
+  locale,
+  dict,
+  imageUrl,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  imageUrl?: string;
+}) {
   return (
     <section className="mx-auto max-w-6xl px-5 md:px-8 py-24 md:py-32">
       <div className="grid items-center gap-12 md:grid-cols-12">
-        {/* Detail shot, deliberately off-balance */}
+        {/* Detail shot, deliberately off-balance — merchant-managed via
+            Settings → Branding, placeholder art until then. */}
         <div className="md:col-span-7 relative aspect-[4/3] overflow-hidden rounded-[var(--radius-soft)] border border-surface-muted">
           <Image
-            src="/products/massar-al-lazward-2.svg"
+            src={imageUrl || "/products/bashmina-classic-2-2.svg"}
             alt=""
             fill
             sizes="(min-width: 768px) 55vw, 100vw"

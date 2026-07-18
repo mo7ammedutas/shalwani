@@ -9,6 +9,95 @@ import { baisaToOmr } from "@/lib/money";
 import { Button } from "@/components/ui/Button";
 import { Label, TextInput } from "@/components/ui/Field";
 
+/** One admin-managed image slot: preview, upload to /api/admin/upload,
+ * remove, and a hidden input carrying the URL into the settings action. */
+function ImageSlot({
+  name,
+  label,
+  hint,
+  value,
+  onChange,
+  uploadLabel,
+  uploadingLabel,
+  removeLabel,
+  previewClass = "h-16 w-16",
+  testId,
+}: {
+  name: string;
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (url: string) => void;
+  uploadLabel: string;
+  uploadingLabel: string;
+  removeLabel: string;
+  previewClass?: string;
+  testId: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPick(file: File) {
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const data = (await res.json()) as { path?: string };
+      if (res.ok && data.path) onChange(data.path);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input type="hidden" name={name} value={value} />
+      <Label htmlFor={`${name}-file`}>{label}</Label>
+      <div className="flex items-center gap-4">
+        {value ? (
+          <span
+            className={`relative block overflow-hidden border border-surface-muted bg-surface ${previewClass}`}
+          >
+            <Image src={value} alt="" fill sizes="160px" className="object-cover" />
+          </span>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="border border-dashed border-surface-muted px-4 py-2.5 text-sm text-text-dim hover:border-accent-light hover:text-accent-light disabled:opacity-50 cursor-pointer"
+          data-testid={testId}
+        >
+          {uploading ? uploadingLabel : uploadLabel}
+        </button>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="text-sm text-accent-secondary underline underline-offset-4 cursor-pointer"
+          >
+            {removeLabel}
+          </button>
+        ) : null}
+        <input
+          ref={fileRef}
+          id={`${name}-file`}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/avif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void onPick(file);
+          }}
+        />
+      </div>
+      <p className="text-xs text-text-dim">{hint}</p>
+    </div>
+  );
+}
+
 export function SettingsForm({
   dict,
   action,
@@ -20,69 +109,52 @@ export function SettingsForm({
 }) {
   const t = dict.admin.settings;
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  async function onPickLogo(file: File) {
-    setUploading(true);
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body });
-      const data = (await res.json()) as { path?: string };
-      if (res.ok && data.path) setLogoUrl(data.path);
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
-  }
+  const [heroImageUrl, setHeroImageUrl] = useState(settings.heroImageUrl);
+  const [storyTeaserImageUrl, setStoryTeaserImageUrl] = useState(settings.storyTeaserImageUrl);
 
   return (
     <form action={action} className="flex max-w-2xl flex-col gap-12">
-      <input type="hidden" name="logoUrl" value={logoUrl} />
-
       <fieldset className="flex flex-col gap-5">
         <legend className="font-heading text-lg text-text mb-2">{t.brandingTitle}</legend>
 
-        <div className="flex flex-col gap-3">
-          <Label htmlFor="logo-file">{t.logo}</Label>
-          <div className="flex items-center gap-4">
-            {logoUrl ? (
-              <span className="relative block h-16 w-16 overflow-hidden border border-surface-muted bg-surface">
-                <Image src={logoUrl} alt="" fill sizes="64px" className="object-contain" />
-              </span>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="border border-dashed border-surface-muted px-4 py-2.5 text-sm text-text-dim hover:border-accent-light hover:text-accent-light disabled:opacity-50 cursor-pointer"
-              data-testid="settings-upload-logo"
-            >
-              {uploading ? t.uploading : t.uploadLogo}
-            </button>
-            {logoUrl ? (
-              <button
-                type="button"
-                onClick={() => setLogoUrl("")}
-                className="text-sm text-accent-secondary underline underline-offset-4 cursor-pointer"
-              >
-                {t.removeLogo}
-              </button>
-            ) : null}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/avif"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void onPickLogo(file);
-              }}
-            />
-          </div>
-          <p className="text-xs text-text-dim">{t.logoHint}</p>
-        </div>
+        <ImageSlot
+          name="logoUrl"
+          label={t.logo}
+          hint={t.logoHint}
+          value={logoUrl}
+          onChange={setLogoUrl}
+          uploadLabel={t.uploadLogo}
+          uploadingLabel={t.uploading}
+          removeLabel={t.removeLogo}
+          previewClass="h-16 w-16"
+          testId="settings-upload-logo"
+        />
+
+        <ImageSlot
+          name="heroImageUrl"
+          label={t.heroImage}
+          hint={t.heroImageHint}
+          value={heroImageUrl}
+          onChange={setHeroImageUrl}
+          uploadLabel={t.uploadImage}
+          uploadingLabel={t.uploading}
+          removeLabel={t.removeImage}
+          previewClass="h-16 w-28"
+          testId="settings-upload-hero"
+        />
+
+        <ImageSlot
+          name="storyTeaserImageUrl"
+          label={t.storyTeaserImage}
+          hint={t.storyTeaserImageHint}
+          value={storyTeaserImageUrl}
+          onChange={setStoryTeaserImageUrl}
+          uploadLabel={t.uploadImage}
+          uploadingLabel={t.uploading}
+          removeLabel={t.removeImage}
+          previewClass="h-16 w-[85px]"
+          testId="settings-upload-story"
+        />
 
         <div className="flex flex-col gap-3">
           <Label htmlFor="accent-0">{t.accentColor}</Label>

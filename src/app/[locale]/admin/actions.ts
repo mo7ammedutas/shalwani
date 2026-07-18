@@ -418,6 +418,8 @@ export async function updateSettings(locale: string, formData: FormData) {
   await requirePerm(locale, "settings.write");
 
   const logoUrl = String(formData.get("logoUrl") ?? "").trim();
+  const heroImageUrl = String(formData.get("heroImageUrl") ?? "").trim();
+  const storyTeaserImageUrl = String(formData.get("storyTeaserImageUrl") ?? "").trim();
   const accentPreset = String(formData.get("accentPreset") ?? "midnight");
   const contactEmail = String(formData.get("contactEmail") ?? "").trim();
   const whatsappUrl = String(formData.get("whatsappUrl") ?? "").trim();
@@ -427,6 +429,8 @@ export async function updateSettings(locale: string, formData: FormData) {
 
   const entries: [string, string][] = [
     ["logoUrl", logoUrl],
+    ["heroImageUrl", heroImageUrl],
+    ["storyTeaserImageUrl", storyTeaserImageUrl],
     ["accentPreset", accentPreset],
     ["contactEmail", contactEmail],
     ["whatsappUrl", whatsappUrl],
