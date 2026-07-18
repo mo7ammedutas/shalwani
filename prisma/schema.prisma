@@ -18,6 +18,7 @@ model Product {
   nameEn             String
   descriptionAr      String
   descriptionEn      String
+  category           String         @default("bashmina") // "turma" | "bashmina" — the shop's two massar lines
   color              String // slug into the shared color taxonomy (midnight, lazuli, ...)
   embroidery         String // slug into the embroidery taxonomy (kashmiri, geometric, ...)
   priceBaisa         Int // integer baisa; 1 OMR = 1000 baisa
@@ -213,6 +214,19 @@ model Review {
   createdAt  DateTime @default(now())
 
   @@unique([productId, customerId]) // one review per customer per product
+}
+
+/**
+ * Lookbook image — uploaded independently of products so the gallery can
+ * show workshop scenes and finished commissions that aren't for sale.
+ */
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  captionAr String   @default("")
+  captionEn String   @default("")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 /**

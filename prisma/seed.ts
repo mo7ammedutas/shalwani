@@ -24,6 +24,7 @@ const products = [
   // ── خط العروض — نقشة صغيرة، خياطة يد ──
   {
     slug: "super-turma",
+    category: "turma",
     nameAr: "مصار سوبر تورمة",
     nameEn: "Super Turma Massar",
     descriptionAr:
@@ -38,6 +39,7 @@ const products = [
   },
   {
     slug: "bashmina-classic-1",
+    category: "bashmina",
     nameAr: "مصار الباشمينا — الفئة الأولى",
     nameEn: "Pashmina Massar — Class I",
     descriptionAr:
@@ -53,6 +55,7 @@ const products = [
   },
   {
     slug: "bashmina-classic-2",
+    category: "bashmina",
     nameAr: "مصار الباشمينا — الفئة الثانية",
     nameEn: "Pashmina Massar — Class II",
     descriptionAr:
@@ -68,6 +71,7 @@ const products = [
   },
   {
     slug: "bashmina-vip-1",
+    category: "bashmina",
     nameAr: "مصار الباشمينا VIP — الفئة الأولى",
     nameEn: "Pashmina Massar VIP — Class I",
     descriptionAr:
@@ -83,6 +87,7 @@ const products = [
   },
   {
     slug: "bashmina-vip-2",
+    category: "bashmina",
     nameAr: "مصار الباشمينا VIP — الفئة الثانية",
     nameEn: "Pashmina Massar VIP — Class II",
     descriptionAr:
@@ -99,6 +104,7 @@ const products = [
   // ── خط السنجين الفاخر — قطع فريدة، سعرها بحسب تعقيد التطريز ──
   {
     slug: "sanjin-i",
+    category: "bashmina",
     nameAr: "مَصَر الباشمينا السنجين",
     nameEn: "Sanjin Pashmina Massar",
     descriptionAr:
@@ -113,6 +119,7 @@ const products = [
   },
   {
     slug: "sanjin-ii",
+    category: "bashmina",
     nameAr: "مَصَر الباشمينا السنجين",
     nameEn: "Sanjin Pashmina Massar",
     descriptionAr:
@@ -127,6 +134,7 @@ const products = [
   },
   {
     slug: "sanjin-vvip",
+    category: "bashmina",
     nameAr: "مَصَر الباشمينا السنجين VVIP",
     nameEn: "Sanjin Pashmina Massar VVIP",
     descriptionAr:

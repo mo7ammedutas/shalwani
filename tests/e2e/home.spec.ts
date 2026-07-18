@@ -8,7 +8,7 @@ test.describe("home page", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "ar");
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.getByTestId("hero-shop-cta")).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("مَصَر");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("فخامتك تبدأ من هنا");
   });
 
   test("shows the featured collection with prices in OMR", async ({ page }) => {
@@ -40,7 +40,7 @@ test.describe("language switcher", () => {
     await expect(page).toHaveURL(/\/en$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("massars");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Your elegance starts here");
 
     await page.getByRole("banner").getByRole("link", { name: toArabic }).click();
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

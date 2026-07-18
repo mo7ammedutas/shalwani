@@ -69,6 +69,29 @@ export function ProductForm({
         </p>
       ) : null}
 
+      {/* Category — which of the two massar lines this piece belongs to */}
+      <fieldset className="flex flex-col gap-2.5">
+        <legend className="mb-1 text-sm tracking-wide text-text-dim">{t.category}</legend>
+        <div className="flex flex-wrap gap-3">
+          {(["turma", "bashmina"] as const).map((key) => (
+            <label
+              key={key}
+              className="flex cursor-pointer items-center gap-2.5 border border-surface-muted px-4 py-2.5 has-[:checked]:border-accent-light"
+            >
+              <input
+                type="radio"
+                name="category"
+                value={key}
+                defaultChecked={(product?.category ?? "bashmina") === key}
+                className="accent-[var(--color-accent)]"
+                data-testid={`pf-category-${key}`}
+              />
+              <span className="text-sm text-text">{t.categories[key]}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <Label htmlFor="pf-nameAr">{t.nameAr}</Label>

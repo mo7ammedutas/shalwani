@@ -32,19 +32,34 @@ export default async function GalleryPage({
   const dict = getDictionary(locale);
   const t = dict.gallery;
 
-  const products = await prisma.product.findMany({
-    where: { archived: false },
-    orderBy: [{ featured: "desc" }, { priceBaisa: "desc" }],
+  // Dedicated lookbook uploads come first (Admin → Gallery). Product
+  // photos only fill the page while no dedicated images exist yet.
+  const uploaded = await prisma.galleryImage.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   });
 
-  const items = products.flatMap((p) =>
-    productImagesClient(p.images).map((src, i) => ({
-      src,
-      slug: p.slug,
-      name: locale === "ar" ? p.nameAr : p.nameEn,
-      key: `${p.slug}-${i}`,
-    })),
-  );
+  let items: { src: string; slug: string | null; name: string; key: string }[];
+  if (uploaded.length > 0) {
+    items = uploaded.map((img) => ({
+      src: img.url,
+      slug: null,
+      name: locale === "ar" ? img.captionAr || img.captionEn : img.captionEn || img.captionAr,
+      key: img.id,
+    }));
+  } else {
+    const products = await prisma.product.findMany({
+      where: { archived: false },
+      orderBy: [{ featured: "desc" }, { priceBaisa: "desc" }],
+    });
+    items = products.flatMap((p) =>
+      productImagesClient(p.images).map((src, i) => ({
+        src,
+        slug: p.slug,
+        name: locale === "ar" ? p.nameAr : p.nameEn,
+        key: `${p.slug}-${i}`,
+      })),
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8 pt-10 pb-20 flex flex-col gap-16">
@@ -57,12 +72,9 @@ export default async function GalleryPage({
         <p className="py-14 text-center text-text-dim">{t.empty}</p>
       ) : (
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4" data-testid="gallery-grid">
-          {items.map((item) => (
-            <li key={item.key}>
-              <Link
-                href={`/${locale}/shop/${item.slug}`}
-                className="group relative block aspect-square overflow-hidden bg-surface"
-              >
+          {items.map((item) => {
+            const tile = (
+              <>
                 <Image
                   src={item.src}
                   alt={item.name}
@@ -70,12 +82,26 @@ export default async function GalleryPage({
                   sizes="(min-width: 1024px) 25vw, 50vw"
                   className="object-cover transition-transform duration-[var(--duration-stately)] ease-[var(--ease-luxe)] group-hover:scale-105"
                 />
-                <span className="absolute inset-x-0 bottom-0 bg-bg/80 px-3 py-2 text-xs text-text opacity-0 transition-opacity duration-[var(--duration-calm)] group-hover:opacity-100">
-                  {item.name}
-                </span>
-              </Link>
-            </li>
-          ))}
+                {item.name ? (
+                  <span className="absolute inset-x-0 bottom-0 bg-bg/80 px-3 py-2 text-xs text-text opacity-0 transition-opacity duration-[var(--duration-calm)] group-hover:opacity-100">
+                    {item.name}
+                  </span>
+                ) : null}
+              </>
+            );
+            const tileClass = "group relative block aspect-square overflow-hidden bg-surface";
+            return (
+              <li key={item.key}>
+                {item.slug ? (
+                  <Link href={`/${locale}/shop/${item.slug}`} className={tileClass}>
+                    {tile}
+                  </Link>
+                ) : (
+                  <span className={tileClass}>{tile}</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 

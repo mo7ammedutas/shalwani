@@ -93,13 +93,33 @@ export default async function ShopPage({
         {products.length === 0 ? (
           <p className="py-16 text-center text-text-dim">{dict.shop.empty}</p>
         ) : (
-          <ul className="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
-            {products.map((p, i) => (
-              <li key={p.slug}>
-                <ProductCard product={p} locale={locale} dict={dict} priority={i < 4} />
-              </li>
-            ))}
-          </ul>
+          (["turma", "bashmina"] as const).map((category) => {
+            const group = products.filter((p) => p.category === category);
+            if (group.length === 0) return null;
+            return (
+              <section
+                key={category}
+                data-testid={`category-${category}`}
+                className="flex flex-col gap-8"
+              >
+                <h2 className="font-heading text-2xl text-text hairline-b pb-4">
+                  {dict.shop.categories[category] ?? category}
+                </h2>
+                <ul className="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
+                  {group.map((p, i) => (
+                    <li key={p.slug}>
+                      <ProductCard
+                        product={p}
+                        locale={locale}
+                        dict={dict}
+                        priority={category === "turma" && i < 4}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            );
+          })
         )}
       </div>
     </div>

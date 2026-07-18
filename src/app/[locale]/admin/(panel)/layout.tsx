@@ -25,6 +25,7 @@ export default async function AdminPanelLayout({
   const allNavItems: { section: Section; label: string }[] = [
     { section: "products" as Section, label: t.navProducts },
     { section: "giftAddons" as Section, label: t.navGiftAddons },
+    { section: "gallery" as Section, label: t.navGallery },
     { section: "orders" as Section, label: t.navOrders },
     { section: "customers" as Section, label: t.navCustomers },
     { section: "coupons" as Section, label: t.navCoupons },

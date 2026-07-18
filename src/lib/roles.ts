@@ -11,6 +11,7 @@ export function isRole(value: string): value is Role {
 export type Section =
   | "products"
   | "giftAddons"
+  | "gallery"
   | "orders"
   | "customers"
   | "coupons"
@@ -21,10 +22,10 @@ export type Section =
 
 /** Pages/nav items a role can see. */
 const SECTION_ACCESS: Record<Role, Section[]> = {
-  admin: ["products", "giftAddons", "orders", "customers", "coupons", "reviews", "analytics", "staff", "settings"],
-  manager: ["products", "giftAddons", "orders", "customers", "coupons", "reviews", "analytics"],
+  admin: ["products", "giftAddons", "gallery", "orders", "customers", "coupons", "reviews", "analytics", "staff", "settings"],
+  manager: ["products", "giftAddons", "gallery", "orders", "customers", "coupons", "reviews", "analytics"],
   support: ["orders", "customers", "reviews"],
-  content: ["products", "giftAddons", "reviews"],
+  content: ["products", "giftAddons", "gallery", "reviews"],
   warehouse: ["products", "orders"],
 };
 
@@ -64,6 +65,7 @@ export function sectionsFor(role: Role): Section[] {
 export const SECTION_PATH: Record<Section, string> = {
   products: "",
   giftAddons: "gift-addons",
+  gallery: "gallery",
   orders: "orders",
   customers: "customers",
   coupons: "coupons",

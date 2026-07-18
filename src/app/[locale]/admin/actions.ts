@@ -11,6 +11,7 @@ import { isRole } from "@/lib/roles";
 import { omrToBaisa } from "@/lib/money";
 
 const productSchema = z.object({
+  category: z.enum(["turma", "bashmina"]),
   nameAr: z.string().trim().min(2).max(120),
   nameEn: z.string().trim().min(2).max(120),
   descriptionAr: z.string().trim().min(2).max(2000),
@@ -40,6 +41,7 @@ function parseForm(formData: FormData) {
     images = [];
   }
   return productSchema.safeParse({
+    category: formData.get("category") ?? "bashmina",
     nameAr: formData.get("nameAr"),
     nameEn: formData.get("nameEn"),
     descriptionAr: formData.get("descriptionAr"),
@@ -89,6 +91,7 @@ export async function createProduct(locale: string, formData: FormData) {
   await prisma.product.create({
     data: {
       slug: await uniqueSlug(slugify(data.nameEn)),
+      category: data.category,
       nameAr: data.nameAr,
       nameEn: data.nameEn,
       descriptionAr: data.descriptionAr,
@@ -118,6 +121,7 @@ export async function updateProduct(locale: string, id: string, formData: FormDa
   await prisma.product.update({
     where: { id },
     data: {
+      category: data.category,
       nameAr: data.nameAr,
       nameEn: data.nameEn,
       descriptionAr: data.descriptionAr,
@@ -654,4 +658,28 @@ export async function disableTotp(locale: string) {
   await prisma.adminUser.update({ where: { id: admin!.id }, data: { totpSecret: null } });
   refresh();
   redirect(`/${locale}/admin/security?disabled=1`);
+}
+
+// ── Lookbook (gallery) images — independent of product photos ──
+
+export async function addGalleryImage(locale: string, formData: FormData) {
+  await requirePerm(locale, "products.write");
+  const url = String(formData.get("url") ?? "").trim();
+  if (!url) redirect(`/${locale}/admin/gallery?error=1`);
+  await prisma.galleryImage.create({
+    data: {
+      url,
+      captionAr: String(formData.get("captionAr") ?? "").trim(),
+      captionEn: String(formData.get("captionEn") ?? "").trim(),
+    },
+  });
+  refresh();
+  redirect(`/${locale}/admin/gallery?saved=1`);
+}
+
+export async function deleteGalleryImage(locale: string, id: string) {
+  await requirePerm(locale, "products.write");
+  await prisma.galleryImage.delete({ where: { id } });
+  refresh();
+  redirect(`/${locale}/admin/gallery?deleted=1`);
 }
